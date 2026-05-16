@@ -148,12 +148,41 @@ def get_model():
             }
         )
 
-    model = TribeModel.from_pretrained(
-        "facebook/tribev2",
-        cache_folder=str(cache),
-        config_update=config_update,
-        device=device,
-    )
+    # Model resolution can transiently fail ("model … does not exist",
+    # network/HTTP, or concurrent HF-cache access from another process):
+    # the cache is fine, the call just needs a retry. Retry with backoff;
+    # only on a real (non-transient) error do we surface it immediately.
+    model = None
+    for attempt in range(4):
+        try:
+            model = TribeModel.from_pretrained(
+                "facebook/tribev2",
+                cache_folder=str(cache),
+                config_update=config_update,
+                device=device,
+            )
+            break
+        except ModelsNotDownloaded:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            transient = any(
+                s in repr(exc).lower()
+                for s in (
+                    "does not exist", "could not", "couldn't", "connection",
+                    "timed out", "timeout", "rate limit", "429", "503",
+                    "max retries", "temporarily", "readtimeout", "proxyerror",
+                )
+            )
+            if not transient:
+                raise
+            if attempt == 3:
+                raise ModelsNotDownloaded(
+                    f"{_DOWNLOAD_HINT}\n(transient model-resolution failure "
+                    f"after 4 attempts: {exc!r}. The cache is fine — this is "
+                    f"usually flaky network or concurrent HF-cache access; "
+                    f"just re-run.)"
+                ) from exc
+            time.sleep((3, 8, 20)[attempt])
     # Retarget lazily-loaded HF extractors at the resolved device (covers
     # mps, which cannot travel through the config Literal).
     native.patch_extractor_devices(model)
