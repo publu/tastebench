@@ -62,7 +62,7 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     ap.add_argument("--version", action="version", version=f"tribe-taste {__version__}")
-    sub = ap.add_subparsers(dest="cmd", required=True)
+    sub = ap.add_subparsers(dest="cmd", required=False)
 
     p_prof = sub.add_parser("profile", help="build a taste profile from references")
     p_prof.add_argument("refs", nargs="+", help="reference media files")
@@ -123,8 +123,12 @@ def build_parser() -> argparse.ArgumentParser:
         "--json", action="store_true", help="emit the raw glossary JSON"
     )
 
-    p_tui = sub.add_parser("tui", help="launch the product TUI")
-    p_tui.add_argument("refs", nargs="+", help="reference media files")
+    p_tui = sub.add_parser(
+        "tui", help="interactive TUI (omit refs); or pass refs for a one-shot view"
+    )
+    p_tui.add_argument(
+        "refs", nargs="*", help="reference media files (omit → interactive)"
+    )
     p_tui.add_argument(
         "--demo", metavar="DEMO", help="optional demo to overlay/compare"
     )
@@ -148,6 +152,11 @@ def main(argv: list[str] | None = None) -> int:
     ap = build_parser()
     args = ap.parse_args(argv)
 
+    if args.cmd is None:
+        from . import tui
+
+        return tui.interactive()
+
     if args.cmd == "glossary":
         from . import explainers
 
@@ -162,6 +171,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "tui":
         from . import tui
 
+        if not args.refs:
+            return tui.interactive()
         return tui.run(args.refs, demo=args.demo, use_brain=not args.no_brain)
 
     use_brain = not args.no_brain
