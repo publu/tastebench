@@ -245,3 +245,215 @@ def run(refs, demo: Optional[str] = None, use_brain: bool = True) -> int:
     lay["mid"].update(_craft_table(cmp))
     console.print(lay)
     return 0
+
+
+# --------------------------------------------------------------------------
+# Interactive shell — `tribe-taste` with no args. Pick files + action in
+# the app; no need to know the CLI. rich-only (rich.prompt), no raw-tty.
+# --------------------------------------------------------------------------
+
+_MEDIA_EXTS = None
+
+
+def _media_exts():
+    global _MEDIA_EXTS
+    if _MEDIA_EXTS is None:
+        try:
+            from .engine import SUPPORTED_EXTS
+
+            _MEDIA_EXTS = set(SUPPORTED_EXTS)
+        except Exception:
+            _MEDIA_EXTS = {
+                ".wav", ".mp3", ".flac", ".m4a", ".ogg", ".aac", ".opus",
+                ".png", ".jpg", ".jpeg", ".webp", ".bmp",
+                ".mp4", ".mov", ".mkv", ".avi",
+            }
+    return _MEDIA_EXTS
+
+
+def _pick(console, multi: bool, what: str):
+    """Numbered directory browser. Returns list[str] of paths, or None."""
+    import glob as _glob
+    import os
+
+    from rich.panel import Panel
+    from rich.prompt import Prompt
+    from rich.table import Table
+
+    exts = _media_exts()
+    cur = os.getcwd()
+    chosen: list[str] = []
+    while True:
+        try:
+            entries = sorted(os.listdir(cur))
+        except OSError:
+            cur = os.path.expanduser("~")
+            continue
+        dirs = [e for e in entries
+                if os.path.isdir(os.path.join(cur, e)) and not e.startswith(".")]
+        files = [e for e in entries
+                 if os.path.splitext(e)[1].lower() in exts]
+        t = Table.grid(padding=(0, 2))
+        t.add_column(justify="right", style="grey50")
+        t.add_column()
+        idx = []
+        for d in dirs:
+            idx.append(("d", d))
+            t.add_row(str(len(idx)), f"[cyan]{d}/[/]")
+        for f in files:
+            idx.append(("f", f))
+            mark = ("[green]✓[/] "
+                    if os.path.join(cur, f) in chosen else "  ")
+            t.add_row(str(len(idx)), f"{mark}{f}")
+        seln = (f"  [grey50]·[/] [green]{len(chosen)}[/] selected"
+                if multi and chosen else "")
+        console.print(Panel(
+            t if idx else "[grey50](no folders or media files here)[/]",
+            title=f"[bold]pick {what}[/]  [grey50]{cur}[/]{seln}",
+            subtitle="[grey50]#=open/select · u=up · ~=home · /path · "
+            "g <glob>" + (" · done" if multi else "") + " · q=cancel[/]",
+            border_style="cyan", padding=(1, 1)))
+        ans = Prompt.ask("[bold cyan]>[/]", console=console,
+                         default="" if multi else " ").strip()
+        low = ans.lower()
+        if low == "q":
+            return None
+        if low in ("u", ".."):
+            cur = os.path.dirname(cur) or "/"
+            continue
+        if ans == "~":
+            cur = os.path.expanduser("~")
+            continue
+        if multi and low in ("done", ""):
+            return chosen or None
+        if low.startswith("g "):
+            for m in _glob.glob(os.path.expanduser(ans[2:].strip())):
+                if (os.path.isfile(m)
+                        and os.path.splitext(m)[1].lower() in exts):
+                    m = os.path.abspath(m)
+                    if m not in chosen:
+                        chosen.append(m)
+            continue
+        cand = os.path.abspath(os.path.expanduser(ans)) if ans.strip() else ""
+        if cand and os.path.isdir(cand):
+            cur = cand
+            continue
+        if cand and os.path.isfile(cand):
+            if not multi:
+                return [cand]
+            chosen.remove(cand) if cand in chosen else chosen.append(cand)
+            continue
+        if ans.isdigit() and 1 <= int(ans) <= len(idx):
+            kind, name = idx[int(ans) - 1]
+            full = os.path.abspath(os.path.join(cur, name))
+            if kind == "d":
+                cur = full
+            elif not multi:
+                return [full]
+            else:
+                chosen.remove(full) if full in chosen else chosen.append(full)
+
+
+def interactive() -> int:
+    """Guided, no-args TUI: pick references + demo + action, see results,
+    iterate. Launched by bare `tribe-taste` (or `tribe-taste tui`)."""
+    import os
+    import sys
+
+    if not _need_rich():
+        print("Interactive TUI needs rich:  pip install rich")
+        return 1
+
+    from rich.console import Console
+    from rich.panel import Panel
+    from rich.prompt import Prompt
+
+    console = Console()
+    if not sys.stdin.isatty():
+        console.print(Panel(
+            "[yellow]Not a TTY — the interactive TUI needs a real "
+            "terminal.[/]\nUse the CLI instead, e.g.:\n"
+            "  [cyan]tribe-taste vibe demo.wav --like ref1.wav ref2.wav[/]\n"
+            "  [cyan]tribe-taste compare ref1.wav ref2.wav --to demo.wav[/]",
+            title="tribe-taste", border_style="grey35"))
+        return 0
+
+    console.print(Panel.fit(
+        "[bold]tribe-taste[/]  [grey50]· an MRI for your taste[/]\n"
+        "[grey50]pick a few references you admire, then your demo — "
+        "see exactly how yours diverges.[/]", border_style="cyan"))
+
+    refs: list[str] = []
+    demo = None
+    use_brain = False
+    while True:
+        rs = (f"[green]{len(refs)}[/] refs" if refs else "[grey50]no refs[/]")
+        ds = (f"demo [green]{os.path.basename(demo)}[/]" if demo
+              else "[grey50]no demo[/]")
+        bs = ("[magenta]brain ON[/]" if use_brain
+              else "[grey50]brain off · fast craft-only[/]")
+        console.print(Panel(
+            "[bold]1[/] pick references    [bold]2[/] pick demo\n"
+            "[bold]3[/] vibe [grey50](quick verdict)[/]    "
+            "[bold]4[/] compare [grey50](full visual)[/]\n"
+            "[bold]5[/] optimize [grey50](edit list)[/]    "
+            "[bold]6[/] profile [grey50](taste only)[/]\n"
+            "[bold]b[/] toggle brain    [bold]q[/] quit",
+            title=f"[bold]{rs}  ·  {ds}  ·  {bs}[/]", border_style="grey35"))
+        c = Prompt.ask("[bold cyan]choose[/]", console=console,
+                       default="").strip().lower()
+
+        if c == "q":
+            console.print("[grey50]bye.[/]")
+            return 0
+        if c == "1":
+            p = _pick(console, True, "references (work you admire)")
+            if p:
+                refs = p
+            continue
+        if c == "2":
+            p = _pick(console, False, "your demo")
+            if p:
+                demo = p[0]
+            continue
+        if c == "b":
+            use_brain = not use_brain
+            if use_brain:
+                console.print("[yellow]brain ON — needs the ~20 GB model; "
+                              "first run loads it (minutes). Falls back to "
+                              "craft cleanly if it's absent.[/]")
+            continue
+        if c not in ("3", "4", "5", "6"):
+            console.print("[grey50]enter 1-6, b, or q.[/]")
+            continue
+        if not refs:
+            console.print("[red]pick references first ([bold]1[/]).[/]")
+            continue
+        if c in ("3", "4", "5") and not demo:
+            console.print("[red]pick a demo first ([bold]2[/]).[/]")
+            continue
+        try:
+            if c == "4":
+                run(refs, demo, use_brain=use_brain)
+            elif c == "6":
+                run(refs, None, use_brain=use_brain)
+            else:
+                with console.status("[grey50]analyzing…[/]"):
+                    if c == "3":
+                        from .compare import compare
+                        from .report import to_verdict
+                        pay = compare(demo, refs, use_brain=use_brain)
+                        pay["_kind"] = "compare"
+                        out = to_verdict(pay)
+                    else:  # 5 optimize
+                        from rich.markdown import Markdown
+                        from .optimize import optimize
+                        from .report import to_markdown
+                        pay = optimize(demo, refs, use_brain=use_brain)
+                        pay["_kind"] = "optimize"
+                        out = Markdown(to_markdown(pay))
+                console.print(out)
+        except Exception as e:  # noqa: BLE001
+            console.print(f"[red]run failed:[/] {e}")
+        Prompt.ask("[grey50]Enter for the menu[/]", console=console,
+                   default="")
