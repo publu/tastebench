@@ -1,0 +1,387 @@
+{
+  "_meta": {
+    "schema_version": 1,
+    "description": "tribe-taste explainer dictionary. One entry per craft feature, brain network, brain ROI group, and edit type. Every compare/optimize line attaches its matching entry; report --llm embeds the whole dictionary.",
+    "entry_fields": {
+      "term": "the key, matches a feature/network/edit name",
+      "kind": "craft | brain_network | brain_roi | edit",
+      "plain": "one plain-language sentence",
+      "detail": "what it measures and why it matters for taste",
+      "how_computed": "exactly how the number is derived",
+      "units_range": "units and typical range",
+      "how_to_act": "concrete action (actionable craft + edit only; null otherwise)",
+      "refs": "source/citation"
+    },
+    "sources": [
+      "SONG_BENCHMARK_THESIS.md (feature taxonomy S3, 12-network labels S4, counterfactual edit templates S5)",
+      "DEMO_ANALYSIS_SPEC.md (craft/neural/production axes)",
+      "Ji et al. 2019, NeuroImage — Cole-Anticevic Brain-wide Network Partition",
+      "Berns & Moore 2012; Boksem & Smidts — neuroforecasting: reliability of reward response predicts broad appeal",
+      "Salganik et al. 2006, Science — Music Lab: social influence makes hit outcomes irreducibly noisy"
+    ]
+  },
+
+  "time_to_hook": {
+    "term": "time_to_hook",
+    "kind": "craft",
+    "plain": "How many seconds pass before the song's first big energy moment lands.",
+    "detail": "The most-cited short-form-virality lever: short-form platforms reward songs that pay off fast. A late hook means most listeners leave before the song's best moment, so the taste of references that hook early is dominated by this single number.",
+    "how_computed": "First time the smoothed RMS-dB series crosses 85% of its global peak and holds in the top third for ~3 s; falls back to the global RMS-peak time if it never sustains.",
+    "units_range": "seconds; pop short-form hits typically 5-15 s, slow builds 25-60 s+",
+    "how_to_act": "Cut or compress the intro and arrangement so the first sustained chorus/drop/hook arrives sooner; reference the centroid's time-to-hook as the target.",
+    "refs": "SONG_BENCHMARK_THESIS.md S3 (Layer 1), S5 (edit templates)"
+  },
+  "intro_length": {
+    "term": "intro_length",
+    "kind": "craft",
+    "plain": "Dead time before anything musically happens.",
+    "detail": "Distinct from time_to_hook: this is how long the track stays below its own 35th-percentile energy. Long intros are taste-defining for cinematic/ambient references and taste-killing for short-form pop references.",
+    "how_computed": "First time the RMS-dB series exceeds the 35th percentile of its own distribution (energy ramp-in point).",
+    "units_range": "seconds; 0-8 s typical for modern pop, longer for build-driven genres",
+    "how_to_act": "Trim silence and low-energy build; start closer to the first musical event the references favor.",
+    "refs": "SONG_BENCHMARK_THESIS.md S3 (intro length), S5"
+  },
+  "chorus_lift_db": {
+    "term": "chorus_lift_db",
+    "kind": "craft",
+    "plain": "How much louder the biggest section is than the quietest.",
+    "detail": "Proxy for verse->chorus dynamic punch and sectional contrast. A flat dynamic arc reads as 'no payoff'; references with a strong lift are choosing a high-contrast taste. Measured within one track so a rough demo isn't punished for not being mastered.",
+    "how_computed": "p90 minus p10 of the RMS-dB series (within-track, gain-invariant).",
+    "units_range": "dB; ~6-20 dB; <6 dB is a flat arc, >20 dB is very dynamic",
+    "how_to_act": "Pull the verse/pre back (less density, fewer elements, lower level) and/or push the chorus harder so the jump into it is bigger.",
+    "refs": "SONG_BENCHMARK_THESIS.md S3 (chorus lift / section contrast), S5"
+  },
+  "loopability": {
+    "term": "loopability",
+    "kind": "craft",
+    "plain": "How tonally consistent the song stays from start to finish.",
+    "detail": "The literal short-form loop mechanic: a song that returns to the same tonal world loops cleanly in a feed. Low loopability (wandering harmony) breaks the loop and is a strong negative for short-form-leaning taste.",
+    "how_computed": "Cosine similarity between the average normalized chroma of the first half and the second half of the track [0..1].",
+    "units_range": "0-1; >0.85 highly loopable, <0.6 tonally restless",
+    "how_to_act": "Commit to one tonal center; reduce key changes and contrasting bridges if the references loop tightly.",
+    "refs": "SONG_BENCHMARK_THESIS.md S3 (loopability), S5; DEMO_ANALYSIS_SPEC.md (craft axis)"
+  },
+  "tempo": {
+    "term": "tempo",
+    "kind": "craft",
+    "plain": "The song's speed in beats per minute.",
+    "detail": "Tempo is weak alone but interacts strongly with the rest of the taste signature: references often cluster in a tempo lane, and being far outside that lane changes the entire feel.",
+    "how_computed": "librosa global beat-track tempo on the onset envelope.",
+    "units_range": "BPM; ~60-200, most pop 90-140",
+    "how_to_act": "If references cluster in a tempo lane and the demo sits outside it, consider re-cutting at or half/double-timing toward that pocket.",
+    "refs": "SONG_BENCHMARK_THESIS.md S3 (Layer 2), S5"
+  },
+  "tempo_stability": {
+    "term": "tempo_stability",
+    "kind": "craft",
+    "plain": "How steady the tempo stays across the track.",
+    "detail": "A rock-solid pocket vs. a drifting/rubato feel. References made for movement (dance/short-form) skew to high stability; expressive/acoustic references tolerate lower.",
+    "how_computed": "1 / (1 + tempo_std) where tempo_std is the std of the per-frame tempogram tempo [0..1].",
+    "units_range": "0-1; >0.9 metronomic, <0.7 loose/rubato",
+    "how_to_act": "Tighten timing (grid/quantize or a steadier performance) toward the references' stability if movement matters.",
+    "refs": "SONG_BENCHMARK_THESIS.md S3 (tempo stability)"
+  },
+  "key_stability": {
+    "term": "key_stability",
+    "kind": "craft",
+    "plain": "How often the song stays in its main key.",
+    "detail": "Fraction of beats whose detected key equals the global key. Frequent modulation hurts loopability and sing-along memorability; references that 'commit to one tonal center' score high here.",
+    "how_computed": "Share of per-beat Krumhansl-key estimates equal to the global key [0..1].",
+    "units_range": "0-1; >0.7 committed, <0.5 wandering",
+    "how_to_act": "Reduce modulations; resolve back to the home key more often, matching the references' tonal commitment.",
+    "refs": "SONG_BENCHMARK_THESIS.md S3, S5 (commit to one tonal center)"
+  },
+  "brightness": {
+    "term": "brightness",
+    "kind": "craft",
+    "plain": "How bright vs. dark the overall sound is.",
+    "detail": "Spectral centroid: high = airy/crisp, low = warm/dark. Part song-bones, part production-state; a major axis of timbral taste and one of the strongest catalog-quality levers found in the spec.",
+    "how_computed": "Mean spectral centroid in Hz over the track.",
+    "units_range": "Hz; corpus cuts dark <1800, neutral 1800-2400, bright >=2400",
+    "how_to_act": "Shift the spectral balance toward the references (top-end air / high-shelf, or warmth / low-pass) in the mix or arrangement.",
+    "refs": "DEMO_ANALYSIS_SPEC.md (spectral balance lever); SONG_BENCHMARK_THESIS.md S3"
+  },
+  "dynamic_range_db": {
+    "term": "dynamic_range_db",
+    "kind": "craft",
+    "plain": "How much the loudness breathes between quiet and loud.",
+    "detail": "Health of the dynamic arc across the whole song. Over-compressed = no breathing room; references with a healthy range value contrast and let sections land.",
+    "how_computed": "p95 minus p5 of the full-resolution RMS-dB (sentinel-capped at 100 dB).",
+    "units_range": "dB; ~4-25 dB; very low = squashed, near 100 = saturation flag",
+    "how_to_act": "Back off limiting/compression so quiet parts stay quiet; let the dynamic arc match the references.",
+    "refs": "DEMO_ANALYSIS_SPEC.md (production: dynamic-range health)"
+  },
+  "hook_density_per_min": {
+    "term": "hook_density_per_min",
+    "kind": "craft",
+    "plain": "How often something energetic grabs the listener, per minute.",
+    "detail": "Rate of distinct high-salience energy events. Too low = nothing to latch onto; too high = no contrast/exhausting. Taste references define the right density.",
+    "how_computed": "Upcrossings above the 80th-percentile RMS-dB, normalized to track minutes.",
+    "units_range": "events/min; ~1-8 typical",
+    "how_to_act": "Add or remove distinct energetic moments (fills, drops, vocal ad-libs) to match the references' density.",
+    "refs": "SONG_BENCHMARK_THESIS.md S3 (hook density)"
+  },
+  "voiced_fraction": {
+    "term": "voiced_fraction",
+    "kind": "craft",
+    "plain": "How much of the track has a clear sung/voiced pitch.",
+    "detail": "Vocal presence proxy. Descriptive of taste (vocal-forward vs. instrumental references) but not directly prescribed as an edit.",
+    "how_computed": "Fraction of frames with a finite pyin f0 estimate [0..1].",
+    "units_range": "0-1",
+    "how_to_act": null,
+    "refs": "_librosa_report.py (f0_voiced_frac)"
+  },
+  "f0_range_octaves": {
+    "term": "f0_range_octaves",
+    "kind": "craft",
+    "plain": "How wide the vocal pitch range is, in octaves.",
+    "detail": "Melodic ambition of the vocal. Characterizes a reference's vocal taste; reported, not prescribed.",
+    "how_computed": "log2(p90 / p10) of the voiced f0 distribution.",
+    "units_range": "octaves; ~0.3-1.5 typical for a lead vocal",
+    "how_to_act": null,
+    "refs": "_librosa_report.py (f0_range_oct)"
+  },
+  "flatness": {
+    "term": "flatness",
+    "kind": "craft",
+    "plain": "How noise-like vs. tonal the sound is overall.",
+    "detail": "Spectral flatness: high = noisy/airy/percussive texture, low = pitched/tonal. A timbral-taste descriptor; reported, not directly prescribed.",
+    "how_computed": "Mean spectral flatness over the track.",
+    "units_range": "0-1 (typically small, e.g. 0.001-0.2)",
+    "how_to_act": null,
+    "refs": "_librosa_report.py (flatness_mean)"
+  },
+
+  "Auditory": {
+    "term": "Auditory",
+    "kind": "brain_network",
+    "plain": "Ear-catching / sonically salient.",
+    "detail": "Predicted engagement of the auditory network. High auditory response at the hook is the spec's hypothesis for short-form virality: the sound itself grabs attention.",
+    "how_computed": "Mean predicted response over the Cole-Anticevic Auditory ROIs, z-scored across networks; also reported at the energy-hook second and as split-half temporal reliability.",
+    "units_range": "z-score across the 12 networks; reliability in [-1, 1]",
+    "how_to_act": null,
+    "refs": "SONG_BENCHMARK_THESIS.md S4; Ji et al. 2019"
+  },
+  "Default-Mode": {
+    "term": "Default-Mode",
+    "kind": "brain_network",
+    "plain": "Sticky / memorable / emotionally resonant.",
+    "detail": "DMN engagement is the spec's hypothesis for durability and reactivation (sleeper potential): songs that recruit memory/self-referential processing keep being replayed.",
+    "how_computed": "Mean predicted response over the Cole-Anticevic Default-Mode ROIs, z-scored across networks; hook value and reliability also reported.",
+    "units_range": "z-score; reliability in [-1, 1]",
+    "how_to_act": null,
+    "refs": "SONG_BENCHMARK_THESIS.md S4; DEMO_ANALYSIS_SPEC.md (DMN memorability)"
+  },
+  "Frontoparietal": {
+    "term": "Frontoparietal",
+    "kind": "brain_network",
+    "plain": "Cognitive load / demands focus.",
+    "detail": "High frontoparietal response = 'cognitive friction'. The spec's hypothesis is that LOW friction predicts launch velocity: an easy-to-process song converts faster on first listen.",
+    "how_computed": "Mean predicted response over the Cole-Anticevic Frontoparietal ROIs, z-scored across networks.",
+    "units_range": "z-score; lower is generally better for launch",
+    "how_to_act": null,
+    "refs": "SONG_BENCHMARK_THESIS.md S4 (low frontoparietal -> launch velocity)"
+  },
+  "Cingulo-Opercular": {
+    "term": "Cingulo-Opercular",
+    "kind": "brain_network",
+    "plain": "Attention-grabbing / effort to track.",
+    "detail": "Salience/tonic-alertness network. Moderate engagement = the song commands attention; sustained high engagement can read as effortful.",
+    "how_computed": "Mean predicted response over the Cole-Anticevic Cingulo-Opercular ROIs, z-scored.",
+    "units_range": "z-score",
+    "how_to_act": null,
+    "refs": "Ji et al. 2019; SONG_BENCHMARK_THESIS.md S4"
+  },
+  "Dorsal-Attention": {
+    "term": "Dorsal-Attention",
+    "kind": "brain_network",
+    "plain": "Directs where the listener focuses.",
+    "detail": "Top-down attentional orienting. Relevant to whether arrangement moments successfully steer the listener.",
+    "how_computed": "Mean predicted response over the Cole-Anticevic Dorsal-Attention ROIs, z-scored.",
+    "units_range": "z-score",
+    "how_to_act": null,
+    "refs": "Ji et al. 2019"
+  },
+  "Language": {
+    "term": "Language",
+    "kind": "brain_network",
+    "plain": "Lyrically / semantically engaging.",
+    "detail": "Language-network engagement reflects how much the words/semantics pull the listener; high for lyric-forward references.",
+    "how_computed": "Mean predicted response over the Cole-Anticevic Language ROIs, z-scored.",
+    "units_range": "z-score",
+    "how_to_act": null,
+    "refs": "Ji et al. 2019; SONG_BENCHMARK_THESIS.md S4"
+  },
+  "Somatomotor": {
+    "term": "Somatomotor",
+    "kind": "brain_network",
+    "plain": "Embodied / movement-evoking.",
+    "detail": "Sensorimotor engagement: the 'makes you move' axis. High for groove/dance references.",
+    "how_computed": "Mean predicted response over the Cole-Anticevic Somatomotor ROIs, z-scored.",
+    "units_range": "z-score",
+    "how_to_act": null,
+    "refs": "SONG_BENCHMARK_THESIS.md S4 (Visual / Somatomotor -> embodied)"
+  },
+  "Visual1": {
+    "term": "Visual1",
+    "kind": "brain_network",
+    "plain": "Low-level visual salience.",
+    "detail": "Primary-visual engagement. Carries the video/image taste signal in the multimodal path; near-floor for pure audio.",
+    "how_computed": "Mean predicted response over the Cole-Anticevic Visual1 ROIs, z-scored.",
+    "units_range": "z-score",
+    "how_to_act": null,
+    "refs": "Ji et al. 2019"
+  },
+  "Visual2": {
+    "term": "Visual2",
+    "kind": "brain_network",
+    "plain": "Scene / motion engagement.",
+    "detail": "Higher-order visual engagement (scenes, motion). Carries the video taste signal; near-floor for pure audio.",
+    "how_computed": "Mean predicted response over the Cole-Anticevic Visual2 ROIs, z-scored.",
+    "units_range": "z-score",
+    "how_to_act": null,
+    "refs": "Ji et al. 2019"
+  },
+  "Posterior-Multimodal": {
+    "term": "Posterior-Multimodal",
+    "kind": "brain_network",
+    "plain": "Integrative / cross-sensory binding.",
+    "detail": "Binds sensory streams; relevant to whether audio+visual cohere in the multimodal path.",
+    "how_computed": "Mean predicted response over the Cole-Anticevic Posterior-Multimodal ROIs, z-scored.",
+    "units_range": "z-score",
+    "how_to_act": null,
+    "refs": "Ji et al. 2019"
+  },
+  "Ventral-Multimodal": {
+    "term": "Ventral-Multimodal",
+    "kind": "brain_network",
+    "plain": "Object / meaning integration.",
+    "detail": "Higher-order multimodal meaning integration. A small network; descriptive of integrative taste.",
+    "how_computed": "Mean predicted response over the Cole-Anticevic Ventral-Multimodal ROIs, z-scored.",
+    "units_range": "z-score",
+    "how_to_act": null,
+    "refs": "Ji et al. 2019"
+  },
+  "Orbito-Affective": {
+    "term": "Orbito-Affective",
+    "kind": "brain_network",
+    "plain": "Reward-adjacent / pleasurable.",
+    "detail": "Orbitofrontal-affective network: the closest cortical proxy for reward/pleasure. With Default-Mode it forms the reward proxy the spec ties to repeat-worthiness and short-form virality.",
+    "how_computed": "Mean predicted response over the Cole-Anticevic Orbito-Affective ROIs, z-scored.",
+    "units_range": "z-score",
+    "how_to_act": null,
+    "refs": "SONG_BENCHMARK_THESIS.md S4 (reward + auditory at the hook); Ji et al. 2019"
+  },
+
+  "reward_proxy": {
+    "term": "reward_proxy",
+    "kind": "brain_roi",
+    "plain": "A combined 'repeat-worthy / pleasurable' reading.",
+    "detail": "There is no single cortical 'reward' network in the CAB-NP, so the spec reads repeat-worthiness off the Orbito-Affective + Default-Mode pair. High reward proxy at the hook is the headline short-form-virality hypothesis. Per the neuroforecasting literature it is the *reliability* of this response, not its raw level, that predicts broad appeal.",
+    "how_computed": "Mean of the Orbito-Affective and Default-Mode network means (pre-z raw scale).",
+    "units_range": "same scale as network means",
+    "how_to_act": null,
+    "refs": "SONG_BENCHMARK_THESIS.md S4; Berns & Moore 2012; Boksem & Smidts"
+  },
+  "hook_reward": {
+    "term": "hook_reward",
+    "kind": "brain_roi",
+    "plain": "How strongly the reward proxy fires at the song's biggest moment.",
+    "detail": "The reward-proxy value sampled at the energy-hook second specifically. The spec's strongest short-form-virality hypothesis: reward + auditory engagement *at the hook*.",
+    "how_computed": "Reward-proxy networks' response at the global argmax second of the across-network mean trajectory.",
+    "units_range": "z-score at the hook",
+    "how_to_act": null,
+    "refs": "SONG_BENCHMARK_THESIS.md S4, S5 (locate the segment where predicted reward dips)"
+  },
+  "temporal_reliability": {
+    "term": "temporal_reliability",
+    "kind": "brain_roi",
+    "plain": "How consistently a network responds across the track.",
+    "detail": "Split-half (even/odd second) correlation of a network's time series. The neuroforecasting result: reliable reward response, not peak level, is what predicts broad appeal.",
+    "how_computed": "Pearson r between even-indexed and odd-indexed seconds of the network's mean time series.",
+    "units_range": "[-1, 1]; higher = more reliable engagement",
+    "how_to_act": null,
+    "refs": "Berns & Moore 2012; Boksem & Smidts; DEMO_ANALYSIS_SPEC.md (neural axis)"
+  },
+
+  "edit.shorten_intro": {
+    "term": "shorten_intro",
+    "kind": "edit",
+    "plain": "Cut the intro so the hook lands sooner.",
+    "detail": "Section-level, high-confidence edit. The spec's flagship example: 'Intro 22 s -> 10 s => short-form virality +~18%'.",
+    "how_computed": "Counterfactual: lower intro_length / time_to_hook toward the taste centroid and re-score the craft distance; predicted delta is the modeled distance reduction.",
+    "units_range": "predicted change in taste distance; reported with a confidence label",
+    "how_to_act": "Trim the intro and front-load the first chorus/drop/hook.",
+    "refs": "SONG_BENCHMARK_THESIS.md S5; DEMO_ANALYSIS_SPEC.md L3"
+  },
+  "edit.raise_chorus_lift": {
+    "term": "raise_chorus_lift",
+    "kind": "edit",
+    "plain": "Make the chorus hit harder relative to the verse.",
+    "detail": "Section-level, high-confidence edit. Spec: 'Chorus lift is bottom-20% => +4 dB verse->chorus contrast'.",
+    "how_computed": "Counterfactual: raise chorus_lift_db toward the taste centroid and re-score.",
+    "units_range": "predicted change in taste distance; confidence-labeled",
+    "how_to_act": "Pull the verse/pre back and/or push the chorus so the jump is bigger.",
+    "refs": "SONG_BENCHMARK_THESIS.md S5"
+  },
+  "edit.commit_tonal_center": {
+    "term": "commit_tonal_center",
+    "kind": "edit",
+    "plain": "Commit to one key so the song loops cleanly.",
+    "detail": "Section-level edit. Spec: 'Key modulates 3x (low loopability) => commit to one tonal center for the loop.'",
+    "how_computed": "Counterfactual: raise key_stability / loopability toward the centroid and re-score.",
+    "units_range": "predicted change in taste distance; confidence-labeled",
+    "how_to_act": "Reduce modulations; resolve back to the home key.",
+    "refs": "SONG_BENCHMARK_THESIS.md S5"
+  },
+  "edit.shift_tempo_toward_lane": {
+    "term": "shift_tempo_toward_lane",
+    "kind": "edit",
+    "plain": "Move the tempo toward the lane the references cluster in.",
+    "detail": "Section-level edit. Spec: 'Tempo 138; hits in your lane cluster 100-110 => consider a slower pocket.'",
+    "how_computed": "Counterfactual: move tempo toward the taste centroid (clamped to a musically valid step) and re-score.",
+    "units_range": "predicted change in taste distance; confidence-labeled",
+    "how_to_act": "Re-cut at, or half/double-time toward, the references' tempo pocket.",
+    "refs": "SONG_BENCHMARK_THESIS.md S5"
+  },
+  "edit.tighten_tempo": {
+    "term": "tighten_tempo",
+    "kind": "edit",
+    "plain": "Steady the tempo toward the references' pocket consistency.",
+    "detail": "Section-level edit when the references are metronomic and the demo drifts.",
+    "how_computed": "Counterfactual: raise tempo_stability toward the centroid and re-score.",
+    "units_range": "predicted change in taste distance; confidence-labeled",
+    "how_to_act": "Quantize/grid or perform to a steadier click.",
+    "refs": "SONG_BENCHMARK_THESIS.md S3, S5"
+  },
+  "edit.match_brightness": {
+    "term": "match_brightness",
+    "kind": "edit",
+    "plain": "Shift the spectral balance toward the references.",
+    "detail": "Mix/arrangement edit. Brightness is part production-state, so this is tagged medium-confidence (a demo isn't punished for not being mastered).",
+    "how_computed": "Counterfactual: move brightness toward the taste centroid and re-score.",
+    "units_range": "predicted change in taste distance; confidence-labeled",
+    "how_to_act": "High-shelf for air or low-pass/warmth toward the references' tone.",
+    "refs": "DEMO_ANALYSIS_SPEC.md (production-state vs song-bones)"
+  },
+  "edit.open_dynamics": {
+    "term": "open_dynamics",
+    "kind": "edit",
+    "plain": "Let the loudness breathe more, toward the references.",
+    "detail": "Production edit. Tagged medium-confidence since dynamic range is production-state.",
+    "how_computed": "Counterfactual: move dynamic_range_db toward the centroid and re-score.",
+    "units_range": "predicted change in taste distance; confidence-labeled",
+    "how_to_act": "Back off limiting/compression so quiet sections stay quiet.",
+    "refs": "DEMO_ANALYSIS_SPEC.md (production: dynamic-range health)"
+  },
+  "edit.adjust_hook_density": {
+    "term": "adjust_hook_density",
+    "kind": "edit",
+    "plain": "Add or remove energetic moments toward the references' rate.",
+    "detail": "Arrangement edit: too few moments = nothing to latch onto; too many = no contrast.",
+    "how_computed": "Counterfactual: move hook_density_per_min toward the centroid and re-score.",
+    "units_range": "predicted change in taste distance; confidence-labeled",
+    "how_to_act": "Add/remove fills, drops, ad-libs, or section changes.",
+    "refs": "SONG_BENCHMARK_THESIS.md S3 (hook density)"
+  }
+}
