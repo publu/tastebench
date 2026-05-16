@@ -7,7 +7,15 @@ Each is downloaded/installed by the user under its own license. See
 ATTRIBUTION.md for details.
 
   * tribev2 — Meta AI / FAIR (https://github.com/facebookresearch/tribev2)
+      Licensed CC-BY-NC-4.0 (NonCommercial). Because tribe-taste's brain
+      layer runs on tribev2, the tool AS A WHOLE is for non-commercial
+      research / personal creative use only. The MIT license on this
+      wrapper does not grant any commercial right to tribev2.
   * Llama 3.2 — Meta (Llama 3.2 Community License Agreement)
+      Required attribution: "Built with Llama". "Llama 3.2 is licensed
+      under the Llama 3.2 Community License, Copyright © Meta Platforms,
+      Inc. All Rights Reserved." Use beyond 700M MAU requires a separate
+      license from Meta.
   * Whisper — OpenAI (MIT) / faster-whisper (MIT)
   * wav2vec2 alignment model — Meta / torchaudio
   * librosa, numpy, soundfile, rich, and their dependencies

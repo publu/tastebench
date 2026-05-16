@@ -3,6 +3,17 @@
 **Learn the taste signature of media you admire — then see exactly how your
 own demo diverges, and what to change.**
 
+> ⚠️ **Non-commercial — research / personal creative use only.**
+> tribe-taste's own code is MIT, but it runs on Meta's **TRIBE v2 model,
+> which is licensed CC-BY-NC-4.0 (NonCommercial)**. The MIT license on this
+> wrapper does **not** grant commercial rights to the model it depends on, so
+> the tool *as a whole* may not be used commercially. See
+> [LICENSE](LICENSE), [NOTICE](NOTICE), and [ATTRIBUTION.md](ATTRIBUTION.md).
+>
+> **Built with Llama.** The brain layer uses Llama 3.2 — *"Llama 3.2 is
+> licensed under the Llama 3.2 Community License, Copyright © Meta Platforms,
+> Inc. All Rights Reserved."*
+
 You give tribe-taste a few **reference** tracks (or videos/images) you think
 are great. It computes the *taste signature* of what they share — a craft
 fingerprint (hook timing, loopability, dynamics, key stability, tempo…) and,

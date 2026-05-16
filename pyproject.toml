@@ -7,7 +7,7 @@ name = "tribe-taste"
 version = "0.1.0"
 description = "Learn the taste signature of media you admire, then see how your demo diverges and what to change."
 readme = "README.md"
-requires-python = ">=3.10,<3.13"
+requires-python = ">=3.11,<3.13"
 license = { text = "MIT" }
 authors = [{ name = "Pablo", email = "pablo@hashingsystems.com" }]
 keywords = ["music", "audio", "taste", "tribe", "librosa", "creative-tools"]
