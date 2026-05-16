@@ -1,0 +1,55 @@
+# --- audio / media (NEVER commit rights-sensitive or large media) ---
+*.mp3
+*.wav
+*.flac
+*.m4a
+*.ogg
+*.aac
+*.opus
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.npz
+
+# --- secrets / credentials (NEVER commit) ---
+.env
+.env.*
+env*.txt
+*secret*
+*token*
+*.key
+*.pem
+credentials*
+*.credentials
+
+# --- model weights / caches (multi-GB, fetched by scripts/download_models.py) ---
+models/
+model-cache/
+.model-cache/
+.cache/
+*.safetensors
+*.bin
+*.pt
+*.ckpt
+
+# --- python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- example work / scratch outputs ---
+examples/_work/
+*.analysis.json
+*.analysis.md
+.DS_Store

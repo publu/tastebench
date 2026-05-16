@@ -1,0 +1,25 @@
+tribe-taste
+Copyright (c) 2026 Pablo
+Licensed under the MIT License (see LICENSE).
+
+This product depends on, but does NOT redistribute, the following works.
+Each is downloaded/installed by the user under its own license. See
+ATTRIBUTION.md for details.
+
+  * tribev2 — Meta AI / FAIR (https://github.com/facebookresearch/tribev2)
+  * Llama 3.2 — Meta (Llama 3.2 Community License Agreement)
+  * Whisper — OpenAI (MIT) / faster-whisper (MIT)
+  * wav2vec2 alignment model — Meta / torchaudio
+  * librosa, numpy, soundfile, rich, and their dependencies
+
+The device-adaptation modules tribe_taste/native.py, tribe_taste/fast_text.py
+and tribe_taste/timing.py are in-process patches around the upstream tribev2
+package, originally written for an internal TRIBE inference deployment and
+carried here unchanged. They contain no upstream model source and no server,
+credential, or storage code.
+
+The 12-network brain readout follows the published Cole-Anticevic
+Brain-wide Network Partition (Ji et al., 2019, NeuroImage) and is an
+independent implementation.
+
+No endorsement by Meta, OpenAI, or any cited researcher is implied.

@@ -1,0 +1,55 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tribe-taste"
+version = "0.1.0"
+description = "Learn the taste signature of media you admire, then see how your demo diverges and what to change."
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+license = { text = "MIT" }
+authors = [{ name = "Pablo", email = "pablo@hashingsystems.com" }]
+keywords = ["music", "audio", "taste", "tribe", "librosa", "creative-tools"]
+
+# Core deps = the model-free craft layer + CLI/TUI. The heavy brain model
+# is an optional extra (the ~20 GB upstream tribev2 stack).
+dependencies = [
+    "numpy",
+    "librosa",
+    "soundfile",
+    "rich",
+]
+
+[project.optional-dependencies]
+# The TRIBE brain layer. `tribev2` is Meta AI's upstream package (a
+# declared dependency, NOT vendored here) and pulls Llama-3.2-3B +
+# Whisper + wav2vec2 + the fMRI encoder (~20 GB; see scripts/download_models.py
+# and ATTRIBUTION.md). Llama-3.2 is gated — needs a HF token.
+brain = [
+    "torch",
+    "transformers",
+    "huggingface-hub",
+    "tribev2 @ git+https://github.com/facebookresearch/tribev2.git",
+    "moviepy>=2.2.1",
+    "nibabel",
+    "nilearn",
+    "mne",
+    "scipy",
+    "whisperx",
+]
+# Apple-GPU ASR path: much faster Whisper transcription on M-series.
+mlx = ["mlx-whisper"]
+dev = ["pytest"]
+
+[project.scripts]
+tribe-taste = "tribe_taste.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/pablo/tribe-taste"
+
+[tool.setuptools.packages.find]
+include = ["tribe_taste*"]
+
+[tool.setuptools.package-data]
+tribe_taste = ["explainers/*.json"]
