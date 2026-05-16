@@ -20,6 +20,7 @@ dependencies = [
     "soundfile",
     "pillow",
     "rich",
+    "textual>=0.60",
 ]
 
 [project.optional-dependencies]
