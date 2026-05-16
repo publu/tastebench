@@ -117,8 +117,8 @@ class TasteApp(App):
             with Center():
                 with Vertical(id="card"):
                     yield Static(
-                        "◢ tribe-taste · drop work to grade it against "
-                        "the taste you like", id="brand")
+                        "◢ tribe-taste · a focus group for the work "
+                        "you make alone", id="brand")
                     yield Static(id="mode")
                     yield Input(placeholder="drag file(s) here, or type "
                                 "a path / glob, then ⏎", id="drop")
@@ -145,12 +145,12 @@ class TasteApp(App):
         n = len(self.refs)
         if self.mode == "ref":
             self.query_one("#mode", Static).update(
-                "[reverse] REFERENCE [/]  dropping here ADDS to your taste "
-                "set     [dim]· space → grade[/]")
+                "[reverse] REFERENCE [/]  drop work you admire — it builds "
+                "your taste     [dim]space → switch to grade[/]")
         else:
             self.query_one("#mode", Static).update(
-                f"[reverse] GRADE [/]  dropping here GRADES against your "
-                f"[b]{n}[/] references     [dim]· space → reference[/]")
+                f"[reverse] GRADE [/]  drop your draft — graded against your "
+                f"[b]{n}[/] references     [dim]space → switch to reference[/]")
         names = ", ".join(Path(r).name for r in self.refs[-5:]) or "none yet"
         extra = f"  (+{n-5} more)" if n > 5 else ""
         self.query_one("#refs", Static).update(
