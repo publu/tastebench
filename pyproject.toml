@@ -30,7 +30,9 @@ dependencies = [
 brain = [
     "torch",
     "transformers",
-    "huggingface-hub",
+    # <1.15: 1.15 changed model-resolution semantics; the verified-working
+    # TRIBE stack runs on 1.14.x. Pin for reproducible brain installs.
+    "huggingface-hub<1.15",
     "tribev2 @ git+https://github.com/facebookresearch/tribev2.git",
     "moviepy>=2.2.1",
     "nibabel",
