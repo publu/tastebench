@@ -91,26 +91,40 @@ class TasteApp(App):
     CSS = """
     Screen { background: $background; }
     #brand {
-        height: 1; content-align: left middle; padding: 0 2;
-        color: $accent; text-style: bold;
+        dock: top; height: 1; padding: 0 2;
+        background: $panel; color: $accent; text-style: bold;
     }
-    #body { height: 1fr; }
-    #left { width: 38%; border-right: tall $surface; }
-    #tree { height: 1fr; }
-    #refs_in, #demo_in { margin: 0 1; }
+    #body { height: 1fr; padding: 1 1 0 1; }
+
+    #left { width: 36%; padding-right: 1; }
+    .drop {
+        height: 4; border: round $surface; background: $surface;
+        padding: 0 1; margin-bottom: 1;
+    }
+    .drop:focus-within { border: round $accent; }
+    .zlabel { color: $accent; text-style: bold; height: 1; }
+    #refs_in, #demo_in { border: none; background: transparent; padding: 0; }
+    #browse {
+        color: $text-muted; text-style: bold; height: 1; margin-top: 1;
+    }
+    #tree {
+        height: 1fr; border: round $surface; background: $surface;
+        padding: 0 1; scrollbar-size: 1 1;
+    }
+
     #right { width: 1fr; }
     #set {
-        height: auto; max-height: 9; padding: 0 2;
-        border-bottom: tall $surface; color: $text;
+        height: 7; border: round $surface; background: $surface;
+        padding: 1 2; margin-bottom: 1;
     }
-    #out { height: 1fr; padding: 0 1; background: $background; }
+    #out {
+        height: 1fr; border: round $surface; background: $surface;
+        padding: 1 2; scrollbar-size: 1 1;
+    }
     #status {
-        height: 1; dock: bottom; padding: 0 2;
+        dock: bottom; height: 1; padding: 0 2;
         background: $panel; color: $text-muted;
     }
-    Input { border: tall $surface; }
-    Input:focus { border: tall $accent; }
-    .lbl { color: $text-muted; text-style: bold; }
     """
 
     BINDINGS = [
@@ -132,17 +146,27 @@ class TasteApp(App):
         self.busy = False
 
     def compose(self) -> ComposeResult:
-        yield Static("◢ tribe-taste — focus group for the work you make alone", id="brand")
+        yield Static(
+            "◢ tribe-taste · focus group for the work you make alone",
+            id="brand")
         with Horizontal(id="body"):
             with Vertical(id="left"):
+                with Vertical(classes="drop"):
+                    yield Static("⬇  REFERENCES — drag file(s) here",
+                                 classes="zlabel")
+                    yield Input(placeholder="…or a path / glob, ⏎",
+                                id="refs_in")
+                with Vertical(classes="drop"):
+                    yield Static("⬇  DEMO — drag your draft here",
+                                 classes="zlabel")
+                    yield Input(placeholder="…or a path, ⏎", id="demo_in")
+                yield Static("BROWSE  ·  ↑↓ move · ⏎ add ref · d → demo",
+                             id="browse")
                 yield _MediaTree(os.getcwd(), id="tree")
-                yield Static("references — drag files here ▸", classes="lbl")
-                yield Input(placeholder="drop files / path / glob, ⏎", id="refs_in")
-                yield Static("demo ▸", classes="lbl")
-                yield Input(placeholder="drop your draft, ⏎", id="demo_in")
             with Vertical(id="right"):
                 yield Static(id="set")
-                yield RichLog(id="out", wrap=True, markup=True, highlight=False)
+                yield RichLog(id="out", wrap=True, markup=True,
+                              highlight=False)
         yield Static(id="status")
         yield Footer()
 
