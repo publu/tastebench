@@ -18,17 +18,40 @@ from typing import Optional
 
 
 def craft_layer(path: str | Path) -> dict:
-    """Audio-only craft features for one file (model-free)."""
-    from .features import librosa_report
-    from .features.structural import craft_vector
+    """Model-free craft features for one file.
 
-    report = librosa_report.extract(str(path))
-    vec = craft_vector(report)
+    Dispatches by modality: audio -> librosa song-bones; image/video ->
+    visual song-bones (colour/contrast/composition + cut pacing/motion).
+    Same return shape either way, so profile/compare/optimize are
+    modality-agnostic.
+    """
+    import os
+
+    from .features import librosa_report, visual_report
+    from .features.structural import craft_vector
+    from .features.visual_report import visual_vector
+
+    p = str(path)
+    if librosa_report.is_audio(p):
+        report = librosa_report.extract(p)
+        vec = craft_vector(report)
+        kind = "audio"
+    elif visual_report.is_visual(p):
+        report = visual_report.extract(p)
+        vec = visual_vector(report)
+        kind = "visual"
+    else:
+        report = {"_error": f"unsupported_for_craft: {os.path.splitext(p)[1]}"}
+        vec, kind = {}, None
+
+    err = report.get("_error")
+    available = (not bool(err)) and any(v is not None for v in vec.values())
     return {
-        "available": not bool(report.get("_error")),
-        "error": report.get("_error"),
+        "available": available,
+        "error": err,
+        "kind": kind,
         "features": vec,
-        "scalars": report.get("scalars", {}) if not report.get("_error") else {},
+        "scalars": report.get("scalars", {}) if not err else {},
     }
 
 
