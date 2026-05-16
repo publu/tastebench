@@ -45,42 +45,56 @@ numbers + the **full explainer glossary** + a framing question) you can
 paste into any LLM for a deeper, grounded explanation. Add `--format json`
 for machine output, `-o FILE` to write to disk.
 
-## Two layers
+## What it does — the brain layer is the point
+
+tribe-taste exists for one thing: run your reference set and your demo
+through **TRIBE** (Meta's fMRI-encoding model) and read out the
+**12-network Cole-Anticevic brain signature** — auditory / reward / DMN /
+frontoparietal … — i.e. *how the work plays inside a listener's head*, and
+exactly where your demo diverges from the taste you defined. **That neural
+read is the whole reason this tool exists.**
+
+A second, model-free **craft layer** (librosa: hook timing, loopability,
+chorus lift, tempo/key stability, dynamics; colour/contrast/motion for
+video & images) runs with **zero download** — so you can try the whole flow
+in seconds, and so the tool degrades gracefully if you can't run the heavy
+stack. It is the fallback, **not** the pitch.
 
 | Layer | What | Needs the model? | Non-audio? |
 |---|---|---|---|
-| **Craft** | librosa-derived musician-actionable features (time-to-hook, loopability, chorus lift, intro length, tempo/key stability, brightness, dynamics…) | **No** | no-ops gracefully |
-| **Brain** | TRIBE predicted brain response → 12-network Cole-Anticevic signature (auditory/reward/DMN/frontoparietal…) | Yes (~20 GB) | yes — carries video/image |
+| **Brain** *(the point)* | TRIBE → 12-network Cole-Anticevic signature | Yes (~20 GB) | yes — carries video/image |
+| **Craft** *(instant fallback)* | librosa musician-actionable features | No | no-ops gracefully |
 
-The craft layer is fully model-free and is the default that always works.
-The brain layer is a **hypothesis view** (the spec is explicit that the
-neural layer is not yet outcome-validated) and is opt-in.
+Scientific honesty, kept (not buried): the brain layer is a *hypothesis
+view* — predicted neural response, not yet validated against outcomes — and
+the tool says so wherever it's shown. That's rigor, not a reason to skip it.
 
-## Quickstart (craft layer, no model)
+## Quickstart — the full thing (brain + craft)
 
 ```bash
 git clone <this repo> && cd tribe-taste
 python -m venv .venv && source .venv/bin/activate
-pip install -e .                 # core: numpy, librosa, soundfile, rich
-python examples/make_examples.py # synthesize lawful demo clips (no media shipped)
+pip install -e ".[brain]"          # core + torch + Meta's tribev2 stack
+huggingface-cli login              # accept Meta's Llama 3.2 license (gated)
+python scripts/download_models.py  # ~20 GB → ~/.cache/tribe-taste
 
-tribe-taste compare examples/ref_a.wav examples/ref_b.wav \
-    --to examples/demo.wav --no-brain
-tribe-taste optimize examples/demo.wav \
-    --toward examples/ref_a.wav examples/ref_b.wav
+python examples/make_examples.py   # lawful synthetic clips (no media shipped)
+tribe-taste compare  examples/ref_a.wav examples/ref_b.wav --to examples/demo.wav
+tribe-taste optimize examples/demo.wav --toward examples/ref_a.wav examples/ref_b.wav
 ```
 
-`ffmpeg` must be on PATH to read non-WAV audio.
+This runs the **brain + craft** read — the intended experience. `ffmpeg`
+must be on PATH for non-WAV audio.
 
-## Adding the brain layer (optional, heavy)
+### No 20 GB yet / just kicking the tyres → instant craft-only
 
 ```bash
-pip install -e ".[brain]"          # adds torch + Meta's tribev2 stack
-huggingface-cli login              # Llama-3.2 is gated — needs HF access
-python scripts/download_models.py  # ~20 GB into ~/.cache/tribe-taste
-# then drop --no-brain
-tribe-taste compare ref_a.wav ref_b.wav --to demo.wav
+pip install -e .                   # core only: numpy, librosa, soundfile, rich
+tribe-taste compare examples/ref_a.wav examples/ref_b.wav \
+    --to examples/demo.wav --no-brain
 ```
+
+Same flow, sub-second, zero model — a real fallback, not the product.
 
 ### Hardware reality (read this)
 
