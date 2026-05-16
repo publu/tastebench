@@ -24,6 +24,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from . import identity as idy
 from .explainers import get_explainer
 from .features.structural import ACTIONABLE
 from .metric import zdelta
@@ -139,26 +140,29 @@ def optimize(
         edit_term, base_conf = _EDIT_FOR.get(feat, (feat, "medium"))
         conf = _confidence(feat, base_conf, toward)
         ex = get_explainer(f"edit.{edit_term}") or get_explainer(feat)
-        edits.append(
-            {
-                "edit": edit_term,
-                "feature": feat,
-                "from": round(cur, 4),
-                "to": round(cur + step, 4),
-                "toward_taste": round(target, 4),
-                "predicted_distance_delta": -round(gain, 4),
-                "predicted_gain": round(gain, 4),
-                "confidence": conf,
-                "plain": (ex or {}).get("plain", ""),
-                "how_to_act": (ex or {}).get("how_to_act", ""),
-                "explainer": ex,
-                "caveat": (
-                    "Hypothesis to A/B, not a guarantee. Predicted change is "
-                    "in the transparent craft-distance metric, not measured "
-                    "outcomes."
-                ),
-            }
-        )
+        entry = {
+            "edit": edit_term,
+            "feature": feat,
+            "from": round(cur, 4),
+            "to": round(cur + step, 4),
+            "toward_taste": round(target, 4),
+            "predicted_distance_delta": -round(gain, 4),
+            "predicted_gain": round(gain, 4),
+            # the dial-moving numbers: TASTE MATCH now -> after this one edit
+            "match_now": idy.resonance(base_dist),
+            "match_after": idy.resonance(new_dist),
+            "confidence": conf,
+            "plain": (ex or {}).get("plain", ""),
+            "how_to_act": (ex or {}).get("how_to_act", ""),
+            "explainer": ex,
+            "caveat": (
+                "Hypothesis to A/B, not a guarantee. Predicted change is "
+                "in the transparent craft-distance metric, not measured "
+                "outcomes."
+            ),
+        }
+        entry["voice"] = idy.edit_line(entry)
+        edits.append(entry)
 
     edits.sort(key=lambda e: -e["predicted_gain"])
     edits = edits[: max(0, top)]
@@ -173,6 +177,11 @@ def optimize(
             "consistency": toward["consistency"],
         },
         "base_craft_distance": round(base_dist, 4),
+        "taste_match": idy.resonance(base_dist),
+        "headline": idy.verdict_line(idy.resonance(base_dist)),
+        "the_one_move": idy.take(
+            idy.resonance(base_dist), edits[0] if edits else None
+        ),
         "edits": edits,
         "note": (
             "Edits perturb one musician-actionable craft feature toward the "

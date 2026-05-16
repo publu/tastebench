@@ -16,6 +16,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from . import identity as idy
 from .explainers import get_explainer
 from .features.structural import ACTIONABLE
 from .metric import zdelta
@@ -68,6 +69,10 @@ def compare(
         sq += z * z
         nterms += 1
         ex = get_explainer(key)
+        if key.startswith("net."):
+            voice = idy.brain_line(key.split(".")[1], delta, ex)
+        else:
+            voice = idy.feature_line(key, dv, delta, ex)
         lines.append(
             {
                 "term": key,
@@ -79,6 +84,7 @@ def compare(
                 "direction": _direction(key, delta),
                 "actionable": key in ACTIONABLE,
                 "plain": (ex or {}).get("plain", ""),
+                "voice": voice,
                 "explainer": ex,
             }
         )
@@ -91,6 +97,9 @@ def compare(
 
     craft_lines = [r for r in lines if not r["term"].startswith("net.")]
     brain_lines = [r for r in lines if r["term"].startswith("net.")]
+
+    match = idy.resonance(overall)
+    biggest = next((r for r in craft_lines if r["actionable"]), None)
 
     return {
         "demo": {
@@ -106,7 +115,17 @@ def compare(
             "layers": profile["layers"],
         },
         "overall_distance": overall,
+        "taste_match": match,
         "verdict": _verdict(overall),
+        "headline": idy.verdict_line(match),
+        "biggest_lever": (
+            {
+                "term": biggest["term"],
+                "line": biggest["voice"],
+            }
+            if biggest
+            else None
+        ),
         "nearest_reference": nearest,
         "craft_deltas": craft_lines,
         "brain_deltas": brain_lines,
