@@ -20,7 +20,6 @@
       "Salganik et al. 2006, Science — Music Lab: social influence makes hit outcomes irreducibly noisy"
     ]
   },
-
   "time_to_hook": {
     "term": "time_to_hook",
     "kind": "craft",
@@ -151,7 +150,6 @@
     "how_to_act": null,
     "refs": "_librosa_report.py (flatness_mean)"
   },
-
   "Auditory": {
     "term": "Auditory",
     "kind": "brain_network",
@@ -272,7 +270,6 @@
     "how_to_act": null,
     "refs": "SONG_BENCHMARK_THESIS.md S4 (reward + auditory at the hook); Ji et al. 2019"
   },
-
   "reward_proxy": {
     "term": "reward_proxy",
     "kind": "brain_roi",
@@ -303,7 +300,6 @@
     "how_to_act": null,
     "refs": "Berns & Moore 2012; Boksem & Smidts; DEMO_ANALYSIS_SPEC.md (neural axis)"
   },
-
   "edit.shorten_intro": {
     "term": "shorten_intro",
     "kind": "edit",
@@ -383,5 +379,140 @@
     "units_range": "predicted change in taste distance; confidence-labeled",
     "how_to_act": "Add/remove fills, drops, ad-libs, or section changes.",
     "refs": "SONG_BENCHMARK_THESIS.md S3 (hook density)"
+  },
+  "brightness_mean": {
+    "term": "brightness_mean",
+    "kind": "craft",
+    "plain": "how bright the frame is overall",
+    "detail": "Overall luminance — dark/moody vs bright/airy is one of the first things the eye reads and a strong taste signal.",
+    "how_computed": "Mean HSV value channel (video: averaged over sampled frames).",
+    "units_range": "0..1; ~0.35-0.65 typical",
+    "how_to_act": "Lift or crush exposure toward the references' brightness band."
+  },
+  "contrast": {
+    "term": "contrast",
+    "kind": "craft",
+    "plain": "how much light-to-dark separation there is",
+    "detail": "Tonal contrast — flat/hazy vs punchy; the visual analogue of audio dynamic range.",
+    "how_computed": "Stdev of Rec.709 luminance over the frame.",
+    "units_range": "0..~0.4; higher=punchier",
+    "how_to_act": "Add or pull back an S-curve toward the references."
+  },
+  "saturation_mean": {
+    "term": "saturation_mean",
+    "kind": "craft",
+    "plain": "how vivid vs muted the colour is",
+    "detail": "Pastel/desaturated vs saturated — a core aesthetic axis references share.",
+    "how_computed": "Mean HSV saturation.",
+    "units_range": "0..1; ~0.2-0.6",
+    "how_to_act": "Push/pull global saturation toward the references."
+  },
+  "saturation_std": {
+    "term": "saturation_std",
+    "kind": "craft",
+    "plain": "how evenly saturated the frame is",
+    "detail": "Uniform colour wash vs vivid-pop-on-muted-ground; a texture cue.",
+    "how_computed": "Stdev of HSV saturation.",
+    "units_range": "0..~0.4",
+    "how_to_act": ""
+  },
+  "colorfulness": {
+    "term": "colorfulness",
+    "kind": "craft",
+    "plain": "the overall colour richness",
+    "detail": "Greyscale-ish vs richly chromatic in one number.",
+    "how_computed": "Hasler-Susstrunk: sqrt(std(rg)^2+std(yb)^2)+0.3*sqrt(mean(rg)^2+mean(yb)^2).",
+    "units_range": "~0(grey)..80+(vivid)",
+    "how_to_act": "Grade toward/away from the references' colour richness."
+  },
+  "palette_size": {
+    "term": "palette_size",
+    "kind": "craft",
+    "plain": "how many dominant colours it uses",
+    "detail": "Tight 2-3 colour scheme vs busy many-colour frame; an immediately legible signature.",
+    "how_computed": "Adaptive median-cut to 16, count clusters >5% of pixels.",
+    "units_range": "int ~1-12",
+    "how_to_act": "Lock to a scheme / expand the palette toward the references."
+  },
+  "warm_cool_balance": {
+    "term": "warm_cool_balance",
+    "kind": "craft",
+    "plain": "whether colour leans warm or cool",
+    "detail": "Teal-orange vs cold-blue grade; a defining look.",
+    "how_computed": "Saturation-weighted warm-hue minus cool-hue pixel fraction.",
+    "units_range": "-1(cool)..+1(warm)",
+    "how_to_act": "Shift colour grade / WB toward the references' temperature."
+  },
+  "hue_spread": {
+    "term": "hue_spread",
+    "kind": "craft",
+    "plain": "how varied the hues are",
+    "detail": "Monochrome/duotone vs full-spectrum; distinct from saturation.",
+    "how_computed": "Circular stdev of hue over saturated pixels, normalized.",
+    "units_range": "0(mono)..~1",
+    "how_to_act": "Tighten to a duotone or open the hue range toward the references."
+  },
+  "edge_density": {
+    "term": "edge_density",
+    "kind": "craft",
+    "plain": "how busy / detailed the frame is",
+    "detail": "Clean/minimal vs dense/textured visual complexity.",
+    "how_computed": "Fraction of pixels with luminance-gradient magnitude over threshold.",
+    "units_range": "0..1; ~0.05-0.4",
+    "how_to_act": "Simplify (negative space) or add detail toward the references."
+  },
+  "center_bias": {
+    "term": "center_bias",
+    "kind": "craft",
+    "plain": "how centered the composition is",
+    "detail": "Dead-center vs rule-of-thirds/edge-weighted framing.",
+    "how_computed": "Central-third edge energy / total edge energy.",
+    "units_range": "0..1; higher=more centered",
+    "how_to_act": "Recompose toward/away from centered framing."
+  },
+  "aspect_ratio": {
+    "term": "aspect_ratio",
+    "kind": "craft",
+    "plain": "the frame shape",
+    "detail": "Square/vertical/cinematic-wide format is part of the look. Descriptive.",
+    "how_computed": "decoded width / height.",
+    "units_range": "0.56(9:16),1.0,1.78(16:9)",
+    "how_to_act": ""
+  },
+  "motion_energy": {
+    "term": "motion_energy",
+    "kind": "craft",
+    "plain": "how much it moves (video)",
+    "detail": "Static/locked vs kinetic; pacing felt before anything is read.",
+    "how_computed": "Mean absolute luminance diff between consecutive sampled frames.",
+    "units_range": "0..~0.3; video only",
+    "how_to_act": "Add or calm motion toward the references' energy."
+  },
+  "cut_rate_per_min": {
+    "term": "cut_rate_per_min",
+    "kind": "craft",
+    "plain": "how fast it cuts (video)",
+    "detail": "Long takes vs rapid montage; a strong editorial signal.",
+    "how_computed": "Per-frame RGB-histogram L1 spikes over adaptive threshold, per minute.",
+    "units_range": "cuts/min; video only",
+    "how_to_act": "Cut more/less often toward the references' pace."
+  },
+  "avg_shot_len_s": {
+    "term": "avg_shot_len_s",
+    "kind": "craft",
+    "plain": "average shot length (video)",
+    "detail": "Seconds the eye rests per shot; inverse of cut rate.",
+    "how_computed": "Duration / (detected cuts + 1).",
+    "units_range": "seconds; video only",
+    "how_to_act": "Lengthen/shorten average shots toward the references."
+  },
+  "brightness_drift": {
+    "term": "brightness_drift",
+    "kind": "craft",
+    "plain": "how exposure changes over time (video)",
+    "detail": "Whether it visually evolves vs holds one look. Descriptive arc.",
+    "how_computed": "Stdev of per-frame mean brightness across frames.",
+    "units_range": "0..~0.3; video only",
+    "how_to_act": ""
   }
 }
