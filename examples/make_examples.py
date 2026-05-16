@@ -7,10 +7,14 @@ ships media); run this to (re)create local examples for the quickstart.
 
   python examples/make_examples.py
 
-Creates:
+Creates (audio — music craft):
   examples/ref_a.wav      a "reference" — fast hook, tight loop, bright
   examples/ref_b.wav      another reference in the same taste
   examples/demo.wav       a "demo" that diverges (slow hook, key wander, dark)
+Creates (images — visual craft):
+  examples/ref_a.png      a warm-palette "reference"
+  examples/ref_b.png      another warm reference in the same taste
+  examples/demo.png       a cool-palette "demo" that diverges
 
 Then try:
   tribe-taste profile examples/ref_a.wav examples/ref_b.wav --no-brain
@@ -82,6 +86,29 @@ def demo():
     return track
 
 
+def _gradient(c1, c2):
+    """A simple 360x360 left->right colour gradient (synthetic, no rights)."""
+    a = np.zeros((360, 360, 3), np.uint8)
+    for x in range(360):
+        t = x / 359.0
+        a[:, x] = [int(c1[i] * (1 - t) + c2[i] * t) for i in range(3)]
+    return a
+
+
+def make_visual(here: str) -> None:
+    """Synthetic image examples: two warm 'references', one cool 'demo'."""
+    from PIL import Image
+
+    imgs = {
+        "ref_a.png": _gradient((200, 90, 30), (230, 180, 60)),   # warm
+        "ref_b.png": _gradient((210, 100, 40), (240, 170, 70)),  # warm
+        "demo.png": _gradient((20, 60, 150), (40, 140, 170)),    # cool
+    }
+    for name, arr in imgs.items():
+        Image.fromarray(arr, "RGB").save(os.path.join(here, name))
+        print(f"wrote examples/{name}  (360x360)")
+
+
 def main() -> int:
     here = os.path.dirname(os.path.abspath(__file__))
     out = {
@@ -94,9 +121,12 @@ def main() -> int:
         sf.write(os.path.join(here, name), audio / peak * 0.9, SR)
         dur = len(audio) / SR
         print(f"wrote examples/{name}  ({dur:.1f}s)")
+    make_visual(here)
     print("\nNow try:")
     print("  tribe-taste compare examples/ref_a.wav examples/ref_b.wav "
           "--to examples/demo.wav --no-brain")
+    print("  tribe-taste vibe examples/demo.png "
+          "--like examples/ref_a.png examples/ref_b.png   # visual craft")
     return 0
 
 

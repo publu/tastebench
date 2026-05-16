@@ -15,9 +15,12 @@ own demo diverges, and what to change.**
 > Inc. All Rights Reserved."*
 
 You give tribe-taste a few **reference** tracks (or videos/images) you think
-are great. It computes the *taste signature* of what they share — a craft
-fingerprint (hook timing, loopability, dynamics, key stability, tempo…) and,
-optionally, a 12-network *brain-response* signature from Meta's TRIBE model.
+are great — music, video, or images. It computes the *taste signature* of
+what they share — a model-free **craft fingerprint** (for music: hook
+timing, loopability, tempo, key stability, dynamics; for video & images:
+colour scheme, contrast, saturation, palette, composition — plus cut pacing
+and motion for video) and, optionally, a 12-network *brain-response*
+signature from Meta's TRIBE model.
 Then you give it your own **demo**. It tells you, in plain musical language,
 where the demo is off your taste, how far, which reference it's nearest to,
 and a **ranked, confidence-labeled edit list** to move it toward the taste —

@@ -18,6 +18,7 @@ dependencies = [
     "numpy",
     "librosa",
     "soundfile",
+    "pillow",
     "rich",
 ]
 
