@@ -45,31 +45,29 @@ numbers + the **full explainer glossary** + a framing question) you can
 paste into any LLM for a deeper, grounded explanation. Add `--format json`
 for machine output, `-o FILE` to write to disk.
 
-## What it does — the brain layer is the point
+## What it does
 
-tribe-taste exists for one thing: run your reference set and your demo
-through **TRIBE** (Meta's fMRI-encoding model) and read out the
-**12-network Cole-Anticevic brain signature** — auditory / reward / DMN /
-frontoparietal … — i.e. *how the work plays inside a listener's head*, and
-exactly where your demo diverges from the taste you defined. **That neural
-read is the whole reason this tool exists.**
+You give tribe-taste a few references you admire and your own demo. It runs
+both through TRIBE — Meta's fMRI-encoding model — and reads out a 12-network
+Cole-Anticevic brain signature: how the work drives auditory, reward, DMN,
+and frontoparietal response in a listener's head. That neural signature is
+the core of the analysis — it's how the tool measures where your demo
+diverges from the taste you defined, and what to change.
 
-A second, model-free **craft layer** (librosa: hook timing, loopability,
-chorus lift, tempo/key stability, dynamics; colour/contrast/motion for
-video & images) runs with **zero download** — so you can try the whole flow
-in seconds, and so the tool degrades gracefully if you can't run the heavy
-stack. It is the fallback, **not** the pitch.
+A model-free craft layer (librosa-derived: hook timing, loopability, chorus
+lift, tempo and key stability, dynamics; colour, contrast and motion for
+video and images) runs alongside it with no download. It is useful on its
+own and is the path the tool uses when the model isn't installed.
 
-| Layer | What | Needs the model? | Non-audio? |
+| Layer | What it measures | Needs the model? | Non-audio? |
 |---|---|---|---|
-| **Brain** *(the point)* | TRIBE → 12-network Cole-Anticevic signature | Yes (~20 GB) | yes — carries video/image |
-| **Craft** *(instant fallback)* | librosa musician-actionable features | No | no-ops gracefully |
+| Brain | TRIBE → 12-network Cole-Anticevic signature | Yes (~20 GB) | yes — carries video/image |
+| Craft | librosa musician-actionable features | No | no-ops gracefully |
 
-Scientific honesty, kept (not buried): the brain layer is a *hypothesis
-view* — predicted neural response, not yet validated against outcomes — and
-the tool says so wherever it's shown. That's rigor, not a reason to skip it.
+The brain layer reports *predicted* neural response, not a validated
+outcome metric; the tool labels it a hypothesis view wherever it appears.
 
-## Quickstart — the full thing (brain + craft)
+## Quickstart
 
 ```bash
 git clone <this repo> && cd tribe-taste
@@ -83,10 +81,9 @@ tribe-taste compare  examples/ref_a.wav examples/ref_b.wav --to examples/demo.wa
 tribe-taste optimize examples/demo.wav --toward examples/ref_a.wav examples/ref_b.wav
 ```
 
-This runs the **brain + craft** read — the intended experience. `ffmpeg`
-must be on PATH for non-WAV audio.
+`ffmpeg` must be on PATH to read non-WAV audio.
 
-### No 20 GB yet / just kicking the tyres → instant craft-only
+### Craft-only (no model)
 
 ```bash
 pip install -e .                   # core only: numpy, librosa, soundfile, rich
@@ -94,7 +91,7 @@ tribe-taste compare examples/ref_a.wav examples/ref_b.wav \
     --to examples/demo.wav --no-brain
 ```
 
-Same flow, sub-second, zero model — a real fallback, not the product.
+Sub-second, no download — the same flow without the brain layer.
 
 ### Hardware reality (read this)
 
