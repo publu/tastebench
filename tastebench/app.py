@@ -30,7 +30,7 @@ for _k, _v in {
 }.items():
     os.environ.setdefault(_k, _v)
 
-from textual import work
+from textual import events, work
 from textual.app import App, ComposeResult
 from textual.binding import Binding
 from textual.containers import Center, Middle, Vertical, VerticalScroll
@@ -119,6 +119,22 @@ def _board(refs: list[str]) -> str:
     return "\n".join(rows).rstrip()
 
 
+class DropInput(Input):
+    """An Input that ingests a dropped/pasted path immediately — no Enter.
+
+    A Finder drag pastes the path into the focused field; we intercept the
+    paste, and if it resolves to media we hand it straight to the app and
+    clear the field. Non-media text falls through to normal typing (then
+    Enter submits as usual)."""
+
+    def on_paste(self, event: events.Paste) -> None:
+        files = _parse_drop(event.text)
+        if files:
+            event.stop()
+            self.value = ""
+            self.app._ingest(files)
+
+
 class TasteBench(App):
     TITLE = "tastebench"
 
@@ -167,8 +183,9 @@ class TasteBench(App):
                     yield Static(id="mode")
                     with VerticalScroll(id="boardwrap"):
                         yield Static(id="board")
-                    yield Input(placeholder="drag file(s) here, or a path "
-                                "/ glob, then ⏎", id="drop")
+                    yield DropInput(placeholder="drag file(s) here "
+                                    "(drops instantly) — or a path / glob "
+                                    "+ ⏎", id="drop")
                     yield RichLog(id="out", wrap=True, markup=True,
                                   highlight=False)
         yield Static(id="status")
@@ -181,6 +198,7 @@ class TasteBench(App):
             "your work felt like — they pin to the board.  Press "
             "[b]space[/] → [magenta]GRADE[/], drop your draft, and it's "
             "graded against the board.  [dim]b = TRIBE neural read.[/]")
+        self.query_one("#drop", Input).focus()
 
     def _refresh(self) -> None:
         n = len(self.refs)
@@ -203,8 +221,12 @@ class TasteBench(App):
     def on_input_submitted(self, e: Input.Submitted) -> None:
         files = _parse_drop(e.value)
         e.input.value = ""
+        self._ingest(files)
+
+    def _ingest(self, files: list[str]) -> None:
         if not files:
-            self.notify("no media in that drop/path", severity="warning")
+            self.notify("no local media in that drop/path — tastebench "
+                        "takes local files, not URLs", severity="warning")
             return
         if self.mode == "ref":
             for f in files:
