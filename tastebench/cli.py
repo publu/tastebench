@@ -149,21 +149,15 @@ def _emit(text: str, out: str | None) -> None:
 
 
 def _launch_interactive() -> int:
-    """Bare `tastebench` → the full-screen Textual app when we have a real
-    terminal + textual; otherwise the rich flow (which itself prints the
-    CLI hint when there's no TTY)."""
-    import sys
+    """Bare `tastebench` → the drop prompt.
 
-    try:
-        if sys.stdout.isatty() and sys.stdin.isatty():
-            from . import app
+    A *line prompt*, not a full-screen app, on purpose: a Finder file-drag
+    only pastes its path at a prompt, never into an alt-screen TUI — so
+    this is the form where drag-drop actually works. `prompt_flow` prints
+    the CLI hint itself when there is no TTY."""
+    from .flow import prompt_flow
 
-            return app.run_app()
-    except Exception:
-        pass  # fall back to the rich flow on any textual/env issue
-    from . import tui
-
-    return tui.interactive()
+    return prompt_flow()
 
 
 def main(argv: list[str] | None = None) -> int:

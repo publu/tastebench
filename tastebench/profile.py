@@ -30,7 +30,8 @@ def _agg(values):
 
 
 def build_profile(
-    refs: Iterable[str | Path], use_brain: bool = True
+    refs: Iterable[str | Path], use_brain: bool = True,
+    precomputed: dict | None = None,
 ) -> dict:
     """Build a taste profile from reference media.
 
@@ -47,10 +48,11 @@ def build_profile(
         }
     """
     refs = [Path(r) for r in refs]
+    pre = precomputed or {}
     sigs = []
     ref_meta = []
     for r in refs:
-        s = signature_for(r, use_brain=use_brain)
+        s = pre.get(str(r)) or signature_for(r, use_brain=use_brain)
         sigs.append(s)
         ref_meta.append(
             {
