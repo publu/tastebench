@@ -148,14 +148,30 @@ def _emit(text: str, out: str | None) -> None:
         print(text)
 
 
+def _launch_interactive() -> int:
+    """Bare `tribe-taste` → the full-screen Textual app when we have a real
+    terminal + textual; otherwise the rich flow (which itself prints the
+    CLI hint when there's no TTY)."""
+    import sys
+
+    try:
+        if sys.stdout.isatty() and sys.stdin.isatty():
+            from . import app
+
+            return app.run_app()
+    except Exception:
+        pass  # fall back to the rich flow on any textual/env issue
+    from . import tui
+
+    return tui.interactive()
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = build_parser()
     args = ap.parse_args(argv)
 
     if args.cmd is None:
-        from . import tui
-
-        return tui.interactive()
+        return _launch_interactive()
 
     if args.cmd == "glossary":
         from . import explainers
@@ -172,7 +188,7 @@ def main(argv: list[str] | None = None) -> int:
         from . import tui
 
         if not args.refs:
-            return tui.interactive()
+            return _launch_interactive()
         return tui.run(args.refs, demo=args.demo, use_brain=not args.no_brain)
 
     use_brain = not args.no_brain
