@@ -1,14 +1,17 @@
-"""tribe_taste.app — the full-screen Textual app (the good TUI).
+"""tribe_taste.app — the simple drop-and-grade page (Textual).
 
-Workflow-shaped, not a chat box: curate a reference set, set a demo, run
-an analysis, read the result, tweak, re-run. Drag files from Finder onto
-either input (the terminal pastes the path — single or multi) or browse
-with the keyboard. Analyses run on a worker thread so the UI never
-freezes. Tuned for Apple Silicon (MPS, bf16 text, whisperx-float32 — the
-verified-faithful TRIBE config) — the M-series env is set on import.
+One screen. Two modes, toggled with [space]:
 
-Launched by bare `tribe-taste` (or `tribe-taste tui`) in a real terminal.
-Non-TTY / no Textual → callers fall back to the rich flow.
+  • REFERENCE — drop work you admire; it's added to your taste set.
+  • GRADE     — drop your draft; it's graded against that set and the
+                grade is printed.
+
+Drag files from Finder straight onto the drop bar (single or multi; the
+terminal pastes the path). Grading runs on a worker thread so the UI
+never freezes. M-series-tuned: the verified-faithful Apple-Silicon env
+(MPS, bf16 text, whisperx-float32) is set on import.
+
+Launched by bare `tribe-taste` on a real terminal; non-TTY falls back.
 """
 
 from __future__ import annotations
@@ -18,9 +21,7 @@ import shlex
 from glob import glob
 from pathlib import Path
 
-# --- M-series-faithful perf env (set BEFORE any tribe engine import) -------
-# device auto->mps, bf16 text (fp16 collapses corr to 0.64), whisperx
-# float32, MPS CPU-fallback. setdefault so an explicit override wins.
+# --- M-series-faithful perf env (BEFORE any tribe engine import) ----------
 for _k, _v in {
     "PYTORCH_ENABLE_MPS_FALLBACK": "1",
     "TRIBE_DEVICE": "auto",
@@ -35,10 +36,8 @@ for _k, _v in {
 from textual import work
 from textual.app import App, ComposeResult
 from textual.binding import Binding
-from textual.containers import Horizontal, Vertical, VerticalScroll
-from textual.widgets import (
-    DirectoryTree, Footer, Input, RichLog, Static,
-)
+from textual.containers import Center, Middle, Vertical
+from textual.widgets import Footer, Input, RichLog, Static
 
 _MEDIA = {
     ".wav", ".mp3", ".flac", ".m4a", ".ogg", ".aac", ".opus",
@@ -48,15 +47,11 @@ _MEDIA = {
 
 
 def _parse_drop(raw: str) -> list[str]:
-    """A dropped/typed string -> existing media paths.
-
-    Finder drag pastes a path; multi-select pastes several, space-joined,
-    spaces backslash-escaped (sometimes quoted). Handle all + globs.
-    """
+    """A dropped/typed string -> existing media paths (single, multi,
+    quoted, backslash-escaped, glob)."""
     raw = raw.strip()
     if not raw:
         return []
-    toks: list[str]
     try:
         toks = shlex.split(raw)
     except ValueError:
@@ -64,8 +59,7 @@ def _parse_drop(raw: str) -> list[str]:
     out: list[str] = []
     for t in toks:
         t = os.path.expanduser(t.strip().strip("'\""))
-        cands = glob(t) if any(c in t for c in "*?[") else [t]
-        for c in cands:
+        for c in (glob(t) if any(g in t for g in "*?[") else [t]):
             if os.path.isfile(c) and Path(c).suffix.lower() in _MEDIA:
                 ap = os.path.abspath(c)
                 if ap not in out:
@@ -73,52 +67,29 @@ def _parse_drop(raw: str) -> list[str]:
     return out
 
 
-class _MediaTree(DirectoryTree):
-    """Browser: directories + media files only."""
-
-    def filter_paths(self, paths):
-        return [
-            p for p in paths
-            if (p.is_dir() and not p.name.startswith("."))
-            or p.suffix.lower() in _MEDIA
-        ]
-
-
 class TasteApp(App):
     TITLE = "tribe-taste"
-    SUB_TITLE = "an MRI for your taste"
 
     CSS = """
-    Screen { background: $background; }
+    Screen { background: $background; align: center middle; }
+    #card { width: 92%; max-width: 110; height: auto; }
     #brand {
-        dock: top; height: 1; padding: 0 2;
-        background: $panel; color: $accent; text-style: bold;
+        height: 1; color: $accent; text-style: bold; margin-bottom: 1;
     }
-    #body { height: 1fr; padding: 1 1 0 1; }
-
-    #left { width: 36%; padding-right: 1; }
-    .drop {
-        height: 4; border: round $surface; background: $surface;
-        padding: 0 1; margin-bottom: 1;
+    #mode {
+        height: 3; border: round $accent; background: $surface;
+        padding: 1 2; text-style: bold; content-align: center middle;
     }
-    .drop:focus-within { border: round $accent; }
-    .zlabel { color: $accent; text-style: bold; height: 1; }
-    #refs_in, #demo_in { border: none; background: transparent; padding: 0; }
-    #browse {
-        color: $text-muted; text-style: bold; height: 1; margin-top: 1;
+    #drop {
+        height: 3; border: round $surface; background: $surface;
+        padding: 0 2; margin: 1 0;
     }
-    #tree {
-        height: 1fr; border: round $surface; background: $surface;
-        padding: 0 1; scrollbar-size: 1 1;
-    }
-
-    #right { width: 1fr; }
-    #set {
-        height: 7; border: round $surface; background: $surface;
-        padding: 1 2; margin-bottom: 1;
+    #drop:focus { border: round $accent; }
+    #refs {
+        height: 3; color: $text-muted; padding: 0 1; margin-bottom: 1;
     }
     #out {
-        height: 1fr; border: round $surface; background: $surface;
+        height: 22; border: round $surface; background: $surface;
         padding: 1 2; scrollbar-size: 1 1;
     }
     #status {
@@ -128,197 +99,153 @@ class TasteApp(App):
     """
 
     BINDINGS = [
-        Binding("v", "run('vibe')", "Vibe", show=True),
-        Binding("c", "run('compare')", "Compare", show=True),
-        Binding("o", "run('optimize')", "Optimize", show=True),
-        Binding("p", "run('profile')", "Profile", show=True),
+        Binding("space", "toggle", "Switch add ⇄ grade", show=True),
         Binding("b", "brain", "Brain on/off", show=True),
-        Binding("d", "set_demo_sel", "Tree→Demo", show=True),
-        Binding("x", "clear", "Clear refs", show=True),
+        Binding("x", "clear", "Clear references", show=True),
         Binding("q", "quit", "Quit", show=True),
     ]
 
     def __init__(self) -> None:
         super().__init__()
         self.refs: list[str] = []
-        self.demo: str | None = None
+        self.mode = "ref"          # "ref" | "grade"
         self.use_brain = False
         self.busy = False
 
     def compose(self) -> ComposeResult:
-        yield Static(
-            "◢ tribe-taste · focus group for the work you make alone",
-            id="brand")
-        with Horizontal(id="body"):
-            with Vertical(id="left"):
-                with Vertical(classes="drop"):
-                    yield Static("⬇  REFERENCES — drag file(s) here",
-                                 classes="zlabel")
-                    yield Input(placeholder="…or a path / glob, ⏎",
-                                id="refs_in")
-                with Vertical(classes="drop"):
-                    yield Static("⬇  DEMO — drag your draft here",
-                                 classes="zlabel")
-                    yield Input(placeholder="…or a path, ⏎", id="demo_in")
-                yield Static("BROWSE  ·  ↑↓ move · ⏎ add ref · d → demo",
-                             id="browse")
-                yield _MediaTree(os.getcwd(), id="tree")
-            with Vertical(id="right"):
-                yield Static(id="set")
-                yield RichLog(id="out", wrap=True, markup=True,
-                              highlight=False)
+        with Middle():
+            with Center():
+                with Vertical(id="card"):
+                    yield Static(
+                        "◢ tribe-taste · drop work to grade it against "
+                        "the taste you like", id="brand")
+                    yield Static(id="mode")
+                    yield Input(placeholder="drag file(s) here, or type "
+                                "a path / glob, then ⏎", id="drop")
+                    yield Static(id="refs")
+                    yield RichLog(id="out", wrap=True, markup=True,
+                                  highlight=False)
         yield Static(id="status")
         yield Footer()
 
     def on_mount(self) -> None:
         self._refresh()
-        out = self.query_one("#out", RichLog)
-        out.write("[b]Welcome.[/b] Drag a few reference files onto "
-                  "[cyan]references[/], drag your draft onto [cyan]demo[/], "
-                  "then press [b]v[/b] (vibe) or [b]c[/b] (compare).")
-        out.write("[dim]Brain layer is off by default (instant craft). "
-                  "Press [b]b[/b] to enable the TRIBE neural read.[/dim]")
+        self.query_one("#out", RichLog).write(
+            "[b]How it works[/b]\n"
+            "1. Leave it on [cyan]REFERENCE[/] and drop a few things you "
+            "wish your work felt like — they teach it your taste.\n"
+            "2. Press [b]space[/] to switch to [magenta]GRADE[/], then drop "
+            "your own draft. It prints the grade: how close it is and the "
+            "one biggest thing to change.\n"
+            "[dim]Brain layer off by default (instant). Press b for the "
+            "TRIBE neural read (needs the model).[/dim]")
 
-    # ---- state / status ---------------------------------------------------
+    # ---- state ------------------------------------------------------------
     def _refresh(self) -> None:
-        rl = "\n".join(f"  [green]•[/] {Path(r).name}" for r in self.refs[-6:]) \
-            or "  [dim]none yet[/]"
-        more = f"  [dim]… +{len(self.refs)-6} more[/]" if len(self.refs) > 6 else ""
-        dm = Path(self.demo).name if self.demo else "[dim]none[/]"
-        self.query_one("#set", Static).update(
-            f"[b cyan]REFERENCES[/] ({len(self.refs)})\n{rl}{more}\n"
-            f"[b cyan]DEMO[/]  {dm}")
-        brain = "[magenta]brain ON[/]" if self.use_brain else "[dim]brain off · craft[/]"
-        st = "[yellow]⟳ analyzing…[/]" if self.busy else "ready"
+        n = len(self.refs)
+        if self.mode == "ref":
+            self.query_one("#mode", Static).update(
+                "[reverse] REFERENCE [/]  dropping here ADDS to your taste "
+                "set     [dim]· space → grade[/]")
+        else:
+            self.query_one("#mode", Static).update(
+                f"[reverse] GRADE [/]  dropping here GRADES against your "
+                f"[b]{n}[/] references     [dim]· space → reference[/]")
+        names = ", ".join(Path(r).name for r in self.refs[-5:]) or "none yet"
+        extra = f"  (+{n-5} more)" if n > 5 else ""
+        self.query_one("#refs", Static).update(
+            f"[b]references ({n})[/]  {names}{extra}")
+        brain = "[magenta]brain ON[/]" if self.use_brain else \
+            "[dim]brain off · craft[/]"
+        state = "[yellow]⟳ grading…[/]" if self.busy else "ready"
         self.query_one("#status", Static).update(
-            f"▸ {len(self.refs)} refs · demo {dm} · {brain} · {st}   "
-            f"[dim]v vibe  c compare  o optimize  p profile  b brain  q quit[/]")
+            f"▸ {n} refs · {brain} · {state}   "
+            f"[dim]space add⇄grade · b brain · x clear · q quit[/]")
 
-    # ---- input / tree (drag-drop + browse) --------------------------------
+    # ---- the one interaction: a drop --------------------------------------
     def on_input_submitted(self, e: Input.Submitted) -> None:
         files = _parse_drop(e.value)
         e.input.value = ""
         if not files:
-            self.notify("no media files in that drop/path", severity="warning")
+            self.notify("no media files in that drop/path",
+                        severity="warning")
             return
-        if e.input.id == "demo_in":
-            self.demo = files[0]
-            self.notify(f"demo → {Path(self.demo).name}")
-        else:
+        if self.mode == "ref":
             for f in files:
                 if f not in self.refs:
                     self.refs.append(f)
             self.notify(f"+{len(files)} reference(s)")
+            self._refresh()
+            return
+        # grade mode
+        if not self.refs:
+            self.notify("add references first (space → REFERENCE, drop a "
+                        "few things you like)", severity="error")
+            return
+        if self.busy:
+            self.notify("still grading the last one…", severity="warning")
+            return
+        self.busy = True
+        self._refresh()
+        cand = files[0]
+        self.query_one("#out", RichLog).write(
+            f"\n[dim]── grading {Path(cand).name}"
+            f"{' (brain — can take minutes)' if self.use_brain else ''} ──[/]")
+        self._grade(cand)
+
+    @work(thread=True, exclusive=True, group="grade")
+    def _grade(self, cand: str) -> None:
+        try:
+            from rich.text import Text
+
+            from .compare import compare
+            from .report import to_verdict
+
+            pay = compare(cand, self.refs, use_brain=self.use_brain)
+            pay["_kind"] = "compare"
+            lines = [Text.from_markup(to_verdict(pay))]
+            top = [r for r in pay.get("craft_deltas", [])
+                   if abs(r.get("spread_norm", 0)) >= 0.5][:4]
+            if top:
+                lines.append(Text.from_markup(
+                    "\n[b]biggest gaps[/]\n" + "\n".join(
+                        f"  • {r['voice']}" for r in top)))
+            self.call_from_thread(self._done, lines)
+        except Exception as exc:  # noqa: BLE001
+            self.call_from_thread(self._fail, repr(exc))
+
+    def _done(self, lines: list) -> None:
+        out = self.query_one("#out", RichLog)
+        for ln in lines:
+            out.write(ln)
+        self.busy = False
         self._refresh()
 
-    def on_directory_tree_file_selected(
-        self, e: "DirectoryTree.FileSelected"
-    ) -> None:
-        p = os.path.abspath(str(e.path))
-        if Path(p).suffix.lower() not in _MEDIA:
-            return
-        if p not in self.refs:
-            self.refs.append(p)
-            self._refresh()
-            self.notify(f"+ref {Path(p).name}  ([b]d[/] = use as demo)")
-        self._last_tree = p
+    def _fail(self, msg: str) -> None:
+        self.query_one("#out", RichLog).write(f"[red]grading failed:[/] {msg}")
+        self.busy = False
+        self._refresh()
+        self.notify("grading failed — see the panel", severity="error")
 
-    def action_set_demo_sel(self) -> None:
-        p = getattr(self, "_last_tree", None)
-        if p:
-            self.demo = p
-            self._refresh()
-            self.notify(f"demo → {Path(p).name}")
+    # ---- controls ---------------------------------------------------------
+    def action_toggle(self) -> None:
+        self.mode = "grade" if self.mode == "ref" else "ref"
+        self._refresh()
+
+    def action_brain(self) -> None:
+        self.use_brain = not self.use_brain
+        self._refresh()
+        if self.use_brain:
+            self.notify("brain ON — needs the ~20GB model; first grade "
+                        "loads it (minutes on M-series). Falls back to "
+                        "craft if absent.", timeout=6)
 
     def action_clear(self) -> None:
         self.refs.clear()
         self._refresh()
         self.notify("references cleared")
 
-    def action_brain(self) -> None:
-        self.use_brain = not self.use_brain
-        self._refresh()
-        if self.use_brain:
-            self.notify("brain ON — needs the ~20GB model; first run loads "
-                        "it (minutes on M-series). Falls back to craft if absent.",
-                        timeout=6)
-
-    # ---- run an analysis (worker thread → UI stays live) ------------------
-    def action_run(self, kind: str) -> None:
-        if self.busy:
-            self.notify("already analyzing…", severity="warning")
-            return
-        if not self.refs:
-            self.notify("add references first (drag onto 'references')",
-                        severity="error")
-            return
-        if kind != "profile" and not self.demo:
-            self.notify("set a demo first (drag onto 'demo')", severity="error")
-            return
-        self.busy = True
-        self._refresh()
-        self.query_one("#out", RichLog).write(
-            f"\n[dim]── running {kind}"
-            f"{' (brain — this can take minutes)' if self.use_brain else ''} ──[/]")
-        self._analyze(kind)
-
-    @work(thread=True, exclusive=True, group="analyze")
-    def _analyze(self, kind: str) -> None:
-        try:
-            from rich.markdown import Markdown
-            from rich.text import Text
-
-            from . import tui
-            from .compare import compare
-            from .optimize import optimize
-            from .profile import build_profile, profile_summary
-            from .report import to_markdown, to_verdict
-
-            ub = self.use_brain
-            items = []
-            if kind == "profile":
-                prof = build_profile(self.refs, use_brain=ub)
-                pay = profile_summary(prof)
-                pay["_kind"] = "profile"
-                items = [Markdown(to_markdown(pay))]
-            elif kind == "vibe":
-                pay = compare(self.demo, self.refs, use_brain=ub)
-                pay["_kind"] = "compare"
-                items = [Text.from_markup(to_verdict(pay))]
-            elif kind == "optimize":
-                pay = optimize(self.demo, self.refs, use_brain=ub)
-                pay["_kind"] = "optimize"
-                items = [Markdown(to_markdown(pay))]
-            else:  # compare — the full visual
-                prof = build_profile(self.refs, use_brain=ub)
-                cmp = compare(self.demo, prof, use_brain=ub)
-                opt = optimize(self.demo, prof, use_brain=False)
-                items = [
-                    tui._header(cmp, prof["n_refs"]),
-                    tui._dial(cmp.get("overall_distance")),
-                    tui._heatmap(cmp),
-                    tui._craft_table(cmp),
-                    tui._edits_panel(opt),
-                ]
-            self.call_from_thread(self._show, items)
-        except Exception as exc:  # noqa: BLE001
-            self.call_from_thread(self._fail, repr(exc))
-
-    def _show(self, items: list) -> None:
-        out = self.query_one("#out", RichLog)
-        for it in items:
-            out.write(it)
-        self.busy = False
-        self._refresh()
-
-    def _fail(self, msg: str) -> None:
-        self.query_one("#out", RichLog).write(f"[red]analysis failed:[/] {msg}")
-        self.busy = False
-        self._refresh()
-        self.notify("analysis failed — see the results pane", severity="error")
-
 
 def run_app() -> int:
-    """Entry point used by the CLI. Returns 0."""
     TasteApp().run()
     return 0
