@@ -47,25 +47,22 @@ for machine output, `-o FILE` to write to disk.
 
 ## What it does
 
-You give tribe-taste a few references you admire and your own demo. It runs
-both through TRIBE — Meta's fMRI-encoding model — and reads out a 12-network
-Cole-Anticevic brain signature: how the work drives auditory, reward, DMN,
-and frontoparietal response in a listener's head. That neural signature is
-the core of the analysis — it's how the tool measures where your demo
-diverges from the taste you defined, and what to change.
+**It's a focus group for the work you make alone.**
 
-A model-free craft layer (librosa-derived: hook timing, loopability, chorus
-lift, tempo and key stability, dynamics; colour, contrast and motion for
-video and images) runs alongside it with no download. It is useful on its
-own and is the path the tool uses when the model isn't installed.
+Hand it a few things you wish your work felt like — tracks, videos, or
+images you admire — plus your own rough draft. tribe-taste simulates how a
+listener's brain reacts to each, learns the specific *vibe* your references
+share, and shows you where your draft misses it and what to change to close
+the gap.
 
-| Layer | What it measures | Needs the model? | Non-audio? |
-|---|---|---|---|
-| Brain | TRIBE → 12-network Cole-Anticevic signature | Yes (~20 GB) | yes — carries video/image |
-| Craft | librosa musician-actionable features | No | no-ops gracefully |
+It's the second pair of ears you don't always have: a quick way to check
+you're heading the right direction and tighten the work *before* you show
+friends or launch. Not "does this grab people" in general — but "does this
+hit the exact response the stuff I love hits."
 
-The brain layer reports *predicted* neural response, not a validated
-outcome metric; the tool labels it a hypothesis view wherever it appears.
+It won't be perfect — every brain is different — but once you've profiled
+the response your references share, you can push your song, video, or image
+toward that vibe on purpose instead of guessing.
 
 ## Quickstart
 
@@ -115,6 +112,33 @@ with a plain sentence, a detail (what it measures + why it matters), how it's
 computed, units/range, how to act (for actionable features), and references.
 Every `compare`/`optimize` line attaches its matching entry; `report --llm`
 embeds the whole dictionary. Browse it with `tribe-taste glossary`.
+
+## How it works
+
+Two layers run on each file.
+
+**Brain.** Your references and your draft go through TRIBE — Meta's
+*fMRI-encoding* model, which predicts the brain response a piece of audio,
+video, or text evokes. tribe-taste reads that prediction out as a
+12-network *Cole-Anticevic* signature: how strongly the work drives the
+auditory, reward, default-mode (DMN), frontoparietal and other networks.
+Your references define a target signature; your draft is scored against how
+far it sits from it, network by network.
+
+**Craft.** A model-free layer (librosa-derived) measures the concrete,
+fixable stuff — hook timing, loopability, chorus lift, tempo and key
+stability, dynamics; colour, contrast and motion for video and images. No
+download, sub-second; it's also what the tool falls back to when the model
+isn't installed.
+
+| Layer | What it measures | Needs the model? | Non-audio? |
+|---|---|---|---|
+| Brain | TRIBE → 12-network Cole-Anticevic signature | Yes (~20 GB) | yes — carries video/image |
+| Craft | librosa musician-actionable features | No | no-ops gracefully |
+
+The brain layer is a *hypothesis view* — it reports a *predicted* neural
+response, not a validated outcome — and the tool says so wherever it
+appears. Brains differ; this profiles a response *pattern*, not a verdict.
 
 ## How the numbers work (transparent by design)
 
