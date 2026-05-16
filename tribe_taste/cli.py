@@ -1,10 +1,14 @@
 """tribe_taste.cli — the command-line entry point.
 
+    tribe-taste vibe      <demo> --like <refs...>    one-command verdict
     tribe-taste profile  <refs...>            build a taste signature
     tribe-taste compare   <refs...> --to <demo>   demo vs taste
     tribe-taste optimize  <demo> --toward <refs...>  ranked edits
     tribe-taste glossary  [TERM]              the explainer dictionary
     tribe-taste tui       ...                 the product TUI
+
+`vibe` is the fast path: one screen — verdict + the single biggest lever.
+Add `--deep` for the full report or `--fix` for the ranked edit list.
 
 Every analysis command takes:
     --format {markdown,json}   output format (default markdown)
@@ -85,6 +89,32 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_common(p_opt)
 
+    p_vibe = sub.add_parser(
+        "vibe", help="one-command verdict: how your demo sits vs a taste"
+    )
+    p_vibe.add_argument("demo", help="your demo (audio/video/image)")
+    p_vibe.add_argument(
+        "--like",
+        required=True,
+        nargs="+",
+        metavar="REF",
+        help="reference media you admire",
+    )
+    p_vibe.add_argument(
+        "--deep",
+        action="store_true",
+        help="full report instead of the one-screen verdict",
+    )
+    p_vibe.add_argument(
+        "--fix",
+        action="store_true",
+        help="show the ranked edit list instead of the verdict",
+    )
+    p_vibe.add_argument(
+        "--top", type=int, default=8, help="max edits with --fix (default 8)"
+    )
+    _add_common(p_vibe)
+
     p_gloss = sub.add_parser("glossary", help="print the explainer dictionary")
     p_gloss.add_argument(
         "term", nargs="?", help="a single term to explain in full"
@@ -157,11 +187,35 @@ def main(argv: list[str] | None = None) -> int:
             args.demo, args.toward, use_brain=use_brain, top=args.top
         )
         payload["_kind"] = "optimize"
+    elif args.cmd == "vibe":
+        if args.fix:
+            from .optimize import optimize
+
+            payload = optimize(
+                args.demo, args.like, use_brain=use_brain, top=args.top
+            )
+            payload["_kind"] = "optimize"
+        else:
+            from .compare import compare
+
+            payload = compare(args.demo, args.like, use_brain=use_brain)
+            payload["_kind"] = "compare"
     else:  # pragma: no cover
         ap.error(f"unknown command {args.cmd}")
         return 2
 
-    text = _report.render(payload, fmt=args.format, llm=args.llm)
+    brief = (
+        args.cmd == "vibe"
+        and not getattr(args, "deep", False)
+        and not getattr(args, "fix", False)
+        and not args.llm
+        and args.format == "markdown"
+    )
+    text = (
+        _report.to_verdict(payload)
+        if brief
+        else _report.render(payload, fmt=args.format, llm=args.llm)
+    )
     _emit(text, args.out)
     return 0
 
