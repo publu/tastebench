@@ -3,7 +3,7 @@
 
 This pre-instantiates Meta's upstream ``tribev2`` model so its own
 downloader fetches everything (the fMRI encoder + Llama-3.2-3B +
-Whisper/wav2vec2 alignment weights) into the tribe-taste model cache.
+Whisper/wav2vec2 alignment weights) into the tastebench model cache.
 
 Requirements:
   * `pip install -e ".[brain]"`  (installs the upstream `tribev2` package)
@@ -13,7 +13,7 @@ Requirements:
 The craft layer needs NONE of this; only the brain layer does.
 
 Cache location (override with MODEL_CACHE=/path):
-  macOS / default : ~/.cache/tribe-taste/model-cache
+  macOS / default : ~/.cache/tastebench/model-cache
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ from pathlib import Path
 def cache_dir() -> Path:
     if os.environ.get("MODEL_CACHE"):
         return Path(os.environ["MODEL_CACHE"]).expanduser()
-    return Path.home() / ".cache" / "tribe-taste" / "model-cache"
+    return Path.home() / ".cache" / "tastebench" / "model-cache"
 
 
 def main() -> int:
@@ -61,7 +61,7 @@ def main() -> int:
     # Reuse the project's device adaptation so this works on Apple Silicon
     # and CUDA alike (and never tries CUDA-only flags off a GPU box).
     try:
-        from tribe_taste import native
+        from tastebench import native
 
         native.apply_runtime_env()
         # allow network for the one-time warm fetch
@@ -86,7 +86,7 @@ def main() -> int:
     )
     print(f"\n[download_models] done. Cache populated at: {cache}")
     print("The brain layer is now available "
-          "(tribe-taste compare/optimize without --no-brain).")
+          "(tastebench compare/optimize without --no-brain).")
     return 0
 
 

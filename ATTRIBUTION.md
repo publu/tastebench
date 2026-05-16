@@ -1,6 +1,6 @@
 # Attribution & Upstream Licenses
 
-tribe-taste is MIT-licensed (see `LICENSE`). It builds on third-party
+tastebench is MIT-licensed (see `LICENSE`). It builds on third-party
 models and libraries that it **does not redistribute** — they are declared
 dependencies the user installs/downloads. Their licenses govern their use.
 
@@ -9,15 +9,15 @@ dependencies the user installs/downloads. Their licenses govern their use.
 - **Project:** `tribev2` — Meta AI / FAIR
 - **Source:** https://github.com/facebookresearch/tribev2
 - **Role here:** a *declared dependency* (`pip install -e ".[brain]"`),
-  invoked through the scrubbed `tribe_taste/engine.py`. tribe-taste does
+  invoked through the scrubbed `tastebench/engine.py`. tastebench does
   **not** copy or republish Meta's model source or weights. The model
   cache (~20 GB) is fetched by `scripts/download_models.py` directly from
   the upstream/HF sources into the user's local cache.
 - **License:** governed by the upstream `facebookresearch/tribev2`
   repository's LICENSE and any model-card terms. Review them before use.
 
-The Apple-Silicon / device-adaptation modules `tribe_taste/native.py`,
-`tribe_taste/fast_text.py`, and `tribe_taste/timing.py` are in-process
+The Apple-Silicon / device-adaptation modules `tastebench/native.py`,
+`tastebench/fast_text.py`, and `tastebench/timing.py` are in-process
 patches **around** the upstream package (device selection, MPS fallback,
 native Whisper transcription, batched embedding, timing). They were written
 for an internal TRIBE inference deployment, contain no upstream model
@@ -47,7 +47,7 @@ no-op or behave unchanged on a CUDA box.
 
 ## Cole-Anticevic Brain-wide Network Partition
 
-The 12-network mapping in `tribe_taste/brain.py` follows the published
+The 12-network mapping in `tastebench/brain.py` follows the published
 **Cole-Anticevic Brain-wide Network Partition** (Ji, J.L. et al., 2019,
 *NeuroImage* 185:35-57, "Mapping the human brain's cortical-subcortical
 functional network organization"). Implemented independently from the
@@ -62,5 +62,5 @@ Moore 2012; Boksem & Smidts) — cited, not redistributed.
 
 ---
 
-If you redistribute tribe-taste, keep this file and `NOTICE`, and do not
+If you redistribute tastebench, keep this file and `NOTICE`, and do not
 imply any endorsement by Meta, OpenAI, or the cited researchers.

@@ -1,4 +1,4 @@
-"""tribe_taste.explainers — the explainer dictionary + accessor.
+"""tastebench.explainers — the explainer dictionary + accessor.
 
 The dictionary (`explainers.json`) is a first-class deliverable: one entry
 per craft feature, brain network, key brain-ROI group, and edit type. Every

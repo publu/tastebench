@@ -19,9 +19,9 @@ It writes (locally, untracked):
 Then:
 
 ```bash
-tribe-taste compare examples/ref_a.wav examples/ref_b.wav \
+tastebench compare examples/ref_a.wav examples/ref_b.wav \
     --to examples/demo.wav --no-brain
-tribe-taste optimize examples/demo.wav \
+tastebench optimize examples/demo.wav \
     --toward examples/ref_a.wav examples/ref_b.wav
 ```
 

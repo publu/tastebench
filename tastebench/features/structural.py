@@ -1,4 +1,4 @@
-"""tribe_taste.features.structural — musician-actionable craft features.
+"""tastebench.features.structural — musician-actionable craft features.
 
 Derives the Layer-1 "song-bones" features (SONG_BENCHMARK_THESIS.md S3) from
 the raw librosa report's series / chroma / beats — no re-extraction, no

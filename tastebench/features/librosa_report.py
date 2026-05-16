@@ -2,7 +2,7 @@
 """
 librosa_report.py -- the craft-feature extractor.
 
-This is the audio-only "craft" layer of tribe-taste: a deterministic
+This is the audio-only "craft" layer of tastebench: a deterministic
 librosa extractor that turns one audio file into a structured report of
 musically meaningful scalars + time series + a chroma grid + a per-beat
 key/strength path. It needs NO model and is the graceful-degradation path
@@ -25,13 +25,13 @@ This schema is held stable on purpose so reference and demo reports are
 directly comparable.
 
 Use as a library:
-    from tribe_taste.features.librosa_report import compute_report, extract
+    from tastebench.features.librosa_report import compute_report, extract
     report = extract("song.mp3")      # decodes to wav if needed, returns dict
 
 Use as a CLI (kept for the historical isolated-subprocess contract -- a
 wedged librosa/numba JIT can be SIGKILLed by a parent without taking the
 caller down):
-    python -m tribe_taste.features.librosa_report path/to/decoded.wav
+    python -m tastebench.features.librosa_report path/to/decoded.wav
     -> single JSON object on stdout, or {"_error": "..."} on failure.
 """
 from __future__ import annotations

@@ -1,11 +1,11 @@
-"""tribe_taste.cli — the command-line entry point.
+"""tastebench.cli — the command-line entry point.
 
-    tribe-taste vibe      <demo> --like <refs...>    one-command verdict
-    tribe-taste profile  <refs...>            build a taste signature
-    tribe-taste compare   <refs...> --to <demo>   demo vs taste
-    tribe-taste optimize  <demo> --toward <refs...>  ranked edits
-    tribe-taste glossary  [TERM]              the explainer dictionary
-    tribe-taste tui       ...                 the product TUI
+    tastebench vibe      <demo> --like <refs...>    one-command verdict
+    tastebench profile  <refs...>            build a taste signature
+    tastebench compare   <refs...> --to <demo>   demo vs taste
+    tastebench optimize  <demo> --toward <refs...>  ranked edits
+    tastebench glossary  [TERM]              the explainer dictionary
+    tastebench tui       ...                 the product TUI
 
 `vibe` is the fast path: one screen — verdict + the single biggest lever.
 Add `--deep` for the full report or `--fix` for the ranked edit list.
@@ -53,7 +53,7 @@ def _add_common(p: argparse.ArgumentParser) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(
-        prog="tribe-taste",
+        prog="tastebench",
         description=(
             "Learn the taste signature of media you admire, then see how "
             "your own demo diverges and what to change. Craft layer is "
@@ -61,7 +61,7 @@ def build_parser() -> argparse.ArgumentParser:
             "(scripts/download_models.py)."
         ),
     )
-    ap.add_argument("--version", action="version", version=f"tribe-taste {__version__}")
+    ap.add_argument("--version", action="version", version=f"tastebench {__version__}")
     sub = ap.add_subparsers(dest="cmd", required=False)
 
     p_prof = sub.add_parser("profile", help="build a taste profile from references")
@@ -149,7 +149,7 @@ def _emit(text: str, out: str | None) -> None:
 
 
 def _launch_interactive() -> int:
-    """Bare `tribe-taste` → the full-screen Textual app when we have a real
+    """Bare `tastebench` → the full-screen Textual app when we have a real
     terminal + textual; otherwise the rich flow (which itself prints the
     CLI hint when there's no TTY)."""
     import sys

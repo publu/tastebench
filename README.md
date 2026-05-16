@@ -1,10 +1,10 @@
-# tribe-taste
+# tastebench
 
 **Learn the taste signature of media you admire — then see exactly how your
 own demo diverges, and what to change.**
 
 > ⚠️ **Non-commercial — research / personal creative use only.**
-> tribe-taste's own code is MIT, but it runs on Meta's **TRIBE v2 model,
+> tastebench's own code is MIT, but it runs on Meta's **TRIBE v2 model,
 > which is licensed CC-BY-NC-4.0 (NonCommercial)**. The MIT license on this
 > wrapper does **not** grant commercial rights to the model it depends on, so
 > the tool *as a whole* may not be used commercially. See
@@ -14,7 +14,7 @@ own demo diverges, and what to change.**
 > licensed under the Llama 3.2 Community License, Copyright © Meta Platforms,
 > Inc. All Rights Reserved."*
 
-You give tribe-taste a few **reference** tracks (or videos/images) you think
+You give tastebench a few **reference** tracks (or videos/images) you think
 are great — music, video, or images. It computes the *taste signature* of
 what they share — a model-free **craft fingerprint** (for music: hook
 timing, loopability, tempo, key stability, dynamics; for video & images:
@@ -27,17 +27,17 @@ and a **ranked, confidence-labeled edit list** to move it toward the taste —
 each edit attached to a glossary entry explaining what it is and how to act.
 
 It does **not** predict hits. Hit outcomes are irreducibly noisy (Salganik
-et al., *Science* 2006). tribe-taste measures *distance to a taste you
+et al., *Science* 2006). tastebench measures *distance to a taste you
 defined*, says it in words, and hands you levers. Honesty is a feature.
 
 ## The reference → demo flow
 
 ```
-tribe-taste profile  ref1.wav ref2.wav ref3.wav            # what you like
-tribe-taste compare  ref1.wav ref2.wav --to demo.wav       # how you diverge
-tribe-taste optimize demo.wav --toward ref1.wav ref2.wav   # ranked edits
-tribe-taste glossary [TERM]                                # the dictionary
-tribe-taste tui      ref1.wav ref2.wav --demo demo.wav     # the visual view
+tastebench profile  ref1.wav ref2.wav ref3.wav            # what you like
+tastebench compare  ref1.wav ref2.wav --to demo.wav       # how you diverge
+tastebench optimize demo.wav --toward ref1.wav ref2.wav   # ranked edits
+tastebench glossary [TERM]                                # the dictionary
+tastebench tui      ref1.wav ref2.wav --demo demo.wav     # the visual view
 ```
 
 Add `--llm` to any analysis command to get a self-contained bundle (raw
@@ -47,10 +47,10 @@ for machine output, `-o FILE` to write to disk.
 
 ## What it does
 
-**It's a focus group for the work you make alone.**
+**It's a private focus group for your drafts.**
 
 Hand it a few things you wish your work felt like — tracks, videos, or
-images you admire — plus your own rough draft. tribe-taste simulates how a
+images you admire — plus your own rough draft. tastebench simulates how a
 listener's brain reacts to each, learns the specific *vibe* your references
 share, and shows you where your draft misses it and what to change to close
 the gap.
@@ -67,15 +67,15 @@ toward that vibe on purpose instead of guessing.
 ## Quickstart
 
 ```bash
-git clone <this repo> && cd tribe-taste
+git clone <this repo> && cd tastebench
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[brain]"          # core + torch + Meta's tribev2 stack
 huggingface-cli login              # accept Meta's Llama 3.2 license (gated)
-python scripts/download_models.py  # ~20 GB → ~/.cache/tribe-taste
+python scripts/download_models.py  # ~20 GB → ~/.cache/tastebench
 
 python examples/make_examples.py   # lawful synthetic clips (no media shipped)
-tribe-taste compare  examples/ref_a.wav examples/ref_b.wav --to examples/demo.wav
-tribe-taste optimize examples/demo.wav --toward examples/ref_a.wav examples/ref_b.wav
+tastebench compare  examples/ref_a.wav examples/ref_b.wav --to examples/demo.wav
+tastebench optimize examples/demo.wav --toward examples/ref_a.wav examples/ref_b.wav
 ```
 
 `ffmpeg` must be on PATH to read non-WAV audio.
@@ -84,7 +84,7 @@ tribe-taste optimize examples/demo.wav --toward examples/ref_a.wav examples/ref_
 
 ```bash
 pip install -e .                   # core only: numpy, librosa, soundfile, rich
-tribe-taste compare examples/ref_a.wav examples/ref_b.wav \
+tastebench compare examples/ref_a.wav examples/ref_b.wav \
     --to examples/demo.wav --no-brain
 ```
 
@@ -106,12 +106,12 @@ Sub-second, no download — the same flow without the brain layer.
 
 ## The explainer dictionary
 
-A first-class deliverable: `tribe_taste/explainers/explainers.json` — one
+A first-class deliverable: `tastebench/explainers/explainers.json` — one
 entry per craft feature, brain network, brain-ROI group, and edit type, each
 with a plain sentence, a detail (what it measures + why it matters), how it's
 computed, units/range, how to act (for actionable features), and references.
 Every `compare`/`optimize` line attaches its matching entry; `report --llm`
-embeds the whole dictionary. Browse it with `tribe-taste glossary`.
+embeds the whole dictionary. Browse it with `tastebench glossary`.
 
 ## How it works
 
@@ -119,7 +119,7 @@ Two layers run on each file.
 
 **Brain.** Your references and your draft go through TRIBE — Meta's
 *fMRI-encoding* model, which predicts the brain response a piece of audio,
-video, or text evokes. tribe-taste reads that prediction out as a
+video, or text evokes. tastebench reads that prediction out as a
 12-network *Cole-Anticevic* signature: how strongly the work drives the
 auditory, reward, default-mode (DMN), frontoparietal and other networks.
 Your references define a target signature; your draft is scored against how
@@ -161,7 +161,7 @@ appears. Brains differ; this profiles a response *pattern*, not a verdict.
 
 ## Upstream & attribution
 
-tribe-taste is MIT-licensed. The TRIBE brain model
+tastebench is MIT-licensed. The TRIBE brain model
 (`facebookresearch/tribev2`), Llama-3.2, and Whisper are **declared
 dependencies the user installs** — not redistributed here. See
 [`ATTRIBUTION.md`](ATTRIBUTION.md) and [`NOTICE`](NOTICE). The 12-network

@@ -1,4 +1,4 @@
-"""tribe_taste.identity — the brand: one palette, one motif, one voice.
+"""tastebench.identity — the brand: one palette, one motif, one voice.
 
 Everything a user sees routes through here so the CLI, the TUI, the report,
 and the shareable card feel like one designed product instead of a stack of

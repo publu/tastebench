@@ -1,4 +1,4 @@
-"""tribe_taste.profile — a set of references -> an aggregate taste signature.
+"""tastebench.profile — a set of references -> an aggregate taste signature.
 
 The taste profile is the centroid of the reference signatures plus the
 spread (consistency) of the set. It captures *what the user likes*: the

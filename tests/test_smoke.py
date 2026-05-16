@@ -43,8 +43,8 @@ def clips(tmp_path_factory):
 
 
 def test_package_imports_without_model():
-    import tribe_taste  # noqa: F401
-    from tribe_taste import (  # noqa: F401
+    import tastebench  # noqa: F401
+    from tastebench import (  # noqa: F401
         brain,
         compare,
         engine,
@@ -53,11 +53,11 @@ def test_package_imports_without_model():
         report,
         signature,
     )
-    from tribe_taste.features import librosa_report, structural  # noqa: F401
+    from tastebench.features import librosa_report, structural  # noqa: F401
 
 
 def test_engine_degrades_clearly(clips):
-    from tribe_taste import engine
+    from tastebench import engine
 
     assert engine.models_available() in (True, False)
     if not engine.models_available():
@@ -74,8 +74,8 @@ def test_engine_degrades_clearly(clips):
 
 
 def test_craft_report(clips):
-    from tribe_taste.features import librosa_report
-    from tribe_taste.features.structural import craft_vector
+    from tastebench.features import librosa_report
+    from tastebench.features.structural import craft_vector
 
     rep = librosa_report.extract(clips[0])
     assert "_error" not in rep
@@ -86,8 +86,8 @@ def test_craft_report(clips):
 
 
 def test_profile_and_compare(clips):
-    from tribe_taste.compare import compare
-    from tribe_taste.profile import build_profile
+    from tastebench.compare import compare
+    from tastebench.profile import build_profile
 
     ref_a, ref_b, demo = clips
     prof = build_profile([ref_a, ref_b], use_brain=False)
@@ -102,7 +102,7 @@ def test_profile_and_compare(clips):
 
 
 def test_optimize_ranked_edits(clips):
-    from tribe_taste.optimize import optimize
+    from tastebench.optimize import optimize
 
     ref_a, ref_b, demo = clips
     res = optimize(demo, [ref_a, ref_b], use_brain=False, top=5)
@@ -117,9 +117,9 @@ def test_optimize_ranked_edits(clips):
 
 
 def test_explainers_complete():
-    from tribe_taste import explainers
-    from tribe_taste.brain import NETWORKS
-    from tribe_taste.features.structural import CRAFT_FEATURES
+    from tastebench import explainers
+    from tastebench.brain import NETWORKS
+    from tastebench.features.structural import CRAFT_FEATURES
 
     e = explainers.entries()
     for feat in CRAFT_FEATURES:
@@ -131,14 +131,14 @@ def test_explainers_complete():
 
 def test_cli_help_and_glossary():
     cp = subprocess.run(
-        [sys.executable, "-m", "tribe_taste.cli", "--help"],
+        [sys.executable, "-m", "tastebench.cli", "--help"],
         capture_output=True, text=True, cwd=ROOT,
     )
     assert cp.returncode == 0
     assert "profile" in cp.stdout and "optimize" in cp.stdout
 
     cp = subprocess.run(
-        [sys.executable, "-m", "tribe_taste.cli", "glossary"],
+        [sys.executable, "-m", "tastebench.cli", "glossary"],
         capture_output=True, text=True, cwd=ROOT,
     )
     assert cp.returncode == 0

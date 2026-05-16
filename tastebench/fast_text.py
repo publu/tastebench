@@ -2,7 +2,7 @@
 
 Provenance: written for an internal TRIBE inference deployment to speed up
 upstream ``tribev2``'s Llama word-embedding extraction without changing its
-numerics. No server / credential / storage code. Carried into tribe-taste
+numerics. No server / credential / storage code. Carried into tastebench
 as-is. Upstream model: facebookresearch/tribev2 (see ATTRIBUTION.md).
 
 

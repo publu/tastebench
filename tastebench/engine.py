@@ -1,4 +1,4 @@
-"""tribe_taste.engine — the pure brain-prediction path.
+"""tastebench.engine — the pure brain-prediction path.
 
 This is a scrubbed re-implementation of the in-memory `compute_predictions`
 path from an internal TRIBE inference server. Everything server-side has been
@@ -11,8 +11,8 @@ Upstream model: Meta AI's `tribev2`
 vendored here. It pulls Llama-3.2-3B + Whisper + wav2vec2 + the fMRI encoder
 (~20 GB). See `scripts/download_models.py` and ATTRIBUTION.md.
 
-The Apple-Silicon / device adaptations live in `tribe_taste.native` and
-`tribe_taste.fast_text` (carried from the same internal work, attributed in
+The Apple-Silicon / device adaptations live in `tastebench.native` and
+`tastebench.fast_text` (carried from the same internal work, attributed in
 those files). They no-op on a CUDA box.
 
 Public API
@@ -21,7 +21,7 @@ Public API
 
 `predict` imports cleanly even with no model cache present; the clear
 "models not downloaded" error is only raised when you actually call it.
-The craft path (`tribe_taste.features.librosa_report`) needs no model at
+The craft path (`tastebench.features.librosa_report`) needs no model at
 all and is the graceful-degradation path for model-free use.
 """
 
@@ -51,8 +51,8 @@ def _model_cache_dir() -> Path:
     if os.environ.get("MODEL_CACHE"):
         return Path(os.environ["MODEL_CACHE"]).expanduser()
     if platform.system() == "Darwin":
-        return Path.home() / ".cache" / "tribe-taste" / "model-cache"
-    return Path.home() / ".cache" / "tribe-taste" / "model-cache"
+        return Path.home() / ".cache" / "tastebench" / "model-cache"
+    return Path.home() / ".cache" / "tastebench" / "model-cache"
 
 
 _DOWNLOAD_HINT = (
@@ -63,7 +63,7 @@ _DOWNLOAD_HINT = (
     "  - A Hugging Face token with Llama-3.2 access is required "
     "(huggingface-cli login).\n"
     "The craft/librosa path needs NO model and works without any of this:\n"
-    "  tribe-taste profile / compare / optimize still run on the craft layer."
+    "  tastebench profile / compare / optimize still run on the craft layer."
 )
 
 

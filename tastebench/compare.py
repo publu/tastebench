@@ -1,4 +1,4 @@
-"""tribe_taste.compare — a demo vs a taste profile.
+"""tastebench.compare — a demo vs a taste profile.
 
 Reports, in plain language:
   * per-craft-feature deltas (demo vs taste centroid), each with its

@@ -2,7 +2,7 @@
 
 Provenance: written for an internal TRIBE inference deployment; pure
 instrumentation (monkeypatched timers around upstream methods). No server /
-credential / storage code. Carried into tribe-taste as-is.
+credential / storage code. Carried into tastebench as-is.
 
 
 Gives a full breakdown so we always know where the wall time goes:

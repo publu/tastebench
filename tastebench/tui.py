@@ -1,4 +1,4 @@
-"""tribe_taste.tui — the product TUI.
+"""tastebench.tui — the product TUI.
 
 A polished one-screen read-out of a taste comparison: a distance-to-your-
 taste dial, a brain-network heatmap (references vs demo), a craft-delta
@@ -6,7 +6,7 @@ table, and the ranked edit list. Built on `rich`. (Style/layout patterns
 are reused from an internal rich dashboard; this is a product view, not a
 pipeline monitor.)
 
-    tribe-taste tui REF [REF ...] [--demo DEMO] [--no-brain]
+    tastebench tui REF [REF ...] [--demo DEMO] [--no-brain]
 """
 
 from __future__ import annotations
@@ -191,7 +191,7 @@ def _header(compare_result: dict, n_refs: int) -> "object":
     nr = compare_result.get("nearest_reference")
     near = f" · nearest ref [bold]{nr['name']}[/]" if nr else ""
     txt = Text.from_markup(
-        f"[bold white]tribe-taste[/]  [grey42]·[/]  demo [bold]{demo}[/]  "
+        f"[bold white]tastebench[/]  [grey42]·[/]  demo [bold]{demo}[/]  "
         f"[grey42]vs[/]  [bold]{n_refs}[/] references{near}"
     )
     return Panel(txt, box=HEAVY, border_style="grey35", padding=(0, 2))
@@ -248,7 +248,7 @@ def run(refs, demo: Optional[str] = None, use_brain: bool = True) -> int:
 
 
 # --------------------------------------------------------------------------
-# Interactive shell — `tribe-taste` with no args. Pick files + action in
+# Interactive shell — `tastebench` with no args. Pick files + action in
 # the app; no need to know the CLI. rich-only (rich.prompt), no raw-tty.
 # --------------------------------------------------------------------------
 
@@ -356,7 +356,7 @@ def _pick(console, multi: bool, what: str):
 
 def interactive() -> int:
     """Guided, no-args TUI: pick references + demo + action, see results,
-    iterate. Launched by bare `tribe-taste` (or `tribe-taste tui`)."""
+    iterate. Launched by bare `tastebench` (or `tastebench tui`)."""
     import os
     import sys
 
@@ -373,13 +373,13 @@ def interactive() -> int:
         console.print(Panel(
             "[yellow]Not a TTY — the interactive TUI needs a real "
             "terminal.[/]\nUse the CLI instead, e.g.:\n"
-            "  [cyan]tribe-taste vibe demo.wav --like ref1.wav ref2.wav[/]\n"
-            "  [cyan]tribe-taste compare ref1.wav ref2.wav --to demo.wav[/]",
-            title="tribe-taste", border_style="grey35"))
+            "  [cyan]tastebench vibe demo.wav --like ref1.wav ref2.wav[/]\n"
+            "  [cyan]tastebench compare ref1.wav ref2.wav --to demo.wav[/]",
+            title="tastebench", border_style="grey35"))
         return 0
 
     console.print(Panel.fit(
-        "[bold]tribe-taste[/]  [grey50]· an MRI for your taste[/]\n"
+        "[bold]tastebench[/]  [grey50]· an MRI for your taste[/]\n"
         "[grey50]pick a few references you admire, then your demo — "
         "see exactly how yours diverges.[/]", border_style="cyan"))
 

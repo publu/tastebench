@@ -1,4 +1,4 @@
-"""tribe_taste.fingerprint — THE signature visual.
+"""tastebench.fingerprint — THE signature visual.
 
 The "taste fingerprint": a stack of labelled horizontal heat-bars, one per
 signal. Each bar's length + colour encodes how close the demo sits to the

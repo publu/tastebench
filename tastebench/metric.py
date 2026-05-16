@@ -1,4 +1,4 @@
-"""tribe_taste.metric — the shared taste-distance metric.
+"""tastebench.metric — the shared taste-distance metric.
 
 A feature delta (demo - taste centroid) is normalized by a *robust* scale,
 not the bare reference spread. Using only the spread blows up to infinity

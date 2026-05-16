@@ -1,4 +1,4 @@
-"""tribe_taste.brain — turn TRIBE predictions into a 12-network signature.
+"""tastebench.brain — turn TRIBE predictions into a 12-network signature.
 
 TRIBE predicts a per-second brain-response array. We summarize it as a
 12-network "neural taste signature" using the Cole-Anticevic Brain-wide

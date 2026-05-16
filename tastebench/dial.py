@@ -1,4 +1,4 @@
-"""tribe_taste.dial — the TASTE MATCH gauge.
+"""tastebench.dial — the TASTE MATCH gauge.
 
 One satisfying headline number: TASTE MATCH %, how close the demo sits to
 the taste you defined (100 = it already sounds like the records you love).

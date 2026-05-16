@@ -17,9 +17,9 @@ Creates (images — visual craft):
   examples/demo.png       a cool-palette "demo" that diverges
 
 Then try:
-  tribe-taste profile examples/ref_a.wav examples/ref_b.wav --no-brain
-  tribe-taste compare examples/ref_a.wav examples/ref_b.wav --to examples/demo.wav --no-brain
-  tribe-taste optimize examples/demo.wav --toward examples/ref_a.wav examples/ref_b.wav
+  tastebench profile examples/ref_a.wav examples/ref_b.wav --no-brain
+  tastebench compare examples/ref_a.wav examples/ref_b.wav --to examples/demo.wav --no-brain
+  tastebench optimize examples/demo.wav --toward examples/ref_a.wav examples/ref_b.wav
 """
 
 from __future__ import annotations
@@ -123,9 +123,9 @@ def main() -> int:
         print(f"wrote examples/{name}  ({dur:.1f}s)")
     make_visual(here)
     print("\nNow try:")
-    print("  tribe-taste compare examples/ref_a.wav examples/ref_b.wav "
+    print("  tastebench compare examples/ref_a.wav examples/ref_b.wav "
           "--to examples/demo.wav --no-brain")
-    print("  tribe-taste vibe examples/demo.png "
+    print("  tastebench vibe examples/demo.png "
           "--like examples/ref_a.png examples/ref_b.png   # visual craft")
     return 0
 

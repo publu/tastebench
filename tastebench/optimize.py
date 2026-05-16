@@ -1,4 +1,4 @@
-"""tribe_taste.optimize — counterfactual edit search toward a taste.
+"""tastebench.optimize — counterfactual edit search toward a taste.
 
 The taste model here is a transparent distance: the demo's craft signature
 vs the reference centroid, each feature spread-normalized by the reference

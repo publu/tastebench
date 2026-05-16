@@ -1,4 +1,4 @@
-"""tribe_taste.features.visual_report — model-free visual craft features.
+"""tastebench.features.visual_report — model-free visual craft features.
 
 The image/video analogue of `librosa_report` + `structural`: turns a still
 image or a video into the visual "song-bones" — colour scheme, palette,

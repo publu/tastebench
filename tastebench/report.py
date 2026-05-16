@@ -1,4 +1,4 @@
-"""tribe_taste.report — emit Markdown, JSON, the shareable card, and the
+"""tastebench.report — emit Markdown, JSON, the shareable card, and the
 LLM-ready bundle.
 
 Everything a reader sees is in the producer voice (see `identity.py`); the
@@ -19,14 +19,14 @@ from . import identity as idy
 
 _FRAMING = (
     "You are a sharp, working music producer mentoring a peer. They gave "
-    "tribe-taste a set of REFERENCE tracks they admire; the tool learned the "
+    "tastebench a set of REFERENCE tracks they admire; the tool learned the "
     "shared 'taste signature' of that set and measured how their own DEMO "
     "diverges from it. Below is the complete raw analysis plus the full "
     "glossary defining every term (craft features, the 12 brain networks, "
     "ROI groups, edit types). Ground every claim ONLY in these numbers and "
     "definitions. Speak plainly and musically, like a friend at the desk — "
     "never a stat dump. Do NOT predict hits, streams, or chart outcomes: "
-    "tribe-taste measures distance to a taste the user chose, not success "
+    "tastebench measures distance to a taste the user chose, not success "
     "(hit outcomes are irreducibly noisy — Salganik et al., Science 2006). "
     "Deliver, in this order: (1) the headline — is this on the taste or "
     "not, in one human sentence; (2) the single biggest lever and why it "
@@ -227,7 +227,7 @@ def to_card(payload: dict) -> str:
 
     L = []
     L.append("╭" + "─" * (W + 2) + "╮")
-    L.append(line("tribe-taste · an MRI for your taste"))
+    L.append(line("tastebench · an MRI for your taste"))
     L.append("├" + "─" * (W + 2) + "┤")
     L.append(line(f"{name}"))
     L.append(line(""))
@@ -273,7 +273,7 @@ def _wrap(text: str, width: int) -> list[str]:
 def to_llm_bundle(payload: dict) -> str:
     bundle = {
         "_about": (
-            "This is a self-contained tribe-taste analysis bundle. It "
+            "This is a self-contained tastebench analysis bundle. It "
             "includes the raw analysis, a schema note explaining every key, "
             "and the FULL term glossary. You can answer the framing question "
             "from this alone — do not request anything else."

@@ -1,4 +1,4 @@
-"""tribe_taste.signature — one media file -> a combined taste signature.
+"""tastebench.signature — one media file -> a combined taste signature.
 
 A signature has two layers:
 

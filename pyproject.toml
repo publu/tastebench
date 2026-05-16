@@ -3,7 +3,7 @@ requires = ["setuptools>=64"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "tribe-taste"
+name = "tastebench"
 version = "0.1.0"
 description = "Learn the taste signature of media you admire, then see how your demo diverges and what to change."
 readme = "README.md"
@@ -47,13 +47,13 @@ mlx = ["mlx-whisper"]
 dev = ["pytest"]
 
 [project.scripts]
-tribe-taste = "tribe_taste.cli:main"
+tastebench = "tastebench.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/pablo/tribe-taste"
+Homepage = "https://github.com/pablo/tastebench"
 
 [tool.setuptools.packages.find]
-include = ["tribe_taste*"]
+include = ["tastebench*"]
 
 [tool.setuptools.package-data]
-tribe_taste = ["explainers/*.json"]
+tastebench = ["explainers/*.json"]

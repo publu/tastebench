@@ -4,7 +4,7 @@ Provenance: this in-process adaptation layer was written for an internal
 TRIBE inference deployment to run Meta's upstream ``tribev2`` pipeline
 natively on Apple Silicon (and unchanged on CUDA). It contains no server,
 credential, or storage code -- only device/runtime patches around the
-upstream wheels. Carried into tribe-taste as-is. Upstream model:
+upstream wheels. Carried into tastebench as-is. Upstream model:
 facebookresearch/tribev2 (a declared dependency; see ATTRIBUTION.md).
 
 
