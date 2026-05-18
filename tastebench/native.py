@@ -159,19 +159,36 @@ def patch_extractor_devices(model) -> str:
     data = getattr(model, "data", None)
     if data is None:
         return device
+    def _retarget(ext, label: str) -> None:
+        if ext is None:
+            return
+        if hasattr(ext, "device"):
+            try:
+                object.__setattr__(ext, "device", device)
+                LOGGER.info("[native] %s.device -> %s", label, device)
+            except Exception as e:  # noqa: BLE001
+                LOGGER.warning("[native] could not set %s.device: %r", label, e)
+        # The video extractor delegates to a nested HuggingFaceImage
+        # (`video_feature.image`); its `_get_data` does
+        # `model.model.to(self.image.device)`, so the device that actually
+        # matters for the video tower lives one level down. The top-level
+        # `video_feature` may not even carry a `.device`. Recurse into the
+        # nested image config so the video/website path lands on mps too,
+        # not the checkpoint's CUDA default (was the "Torch not compiled
+        # with CUDA enabled" crash on Apple Silicon).
+        sub = getattr(ext, "image", None)
+        if sub is not None and sub is not ext:
+            _retarget(sub, f"{label}.image")
+
     for attr in ("audio_feature", "text_feature", "video_feature", "image_feature"):
         ext = getattr(data, attr, None)
-        if ext is None or not hasattr(ext, "device"):
+        if ext is None:
             continue
         # text_feature is driven by fast_text._pick_device(TRIBE_DEVICE);
         # leave its attribute alone so the two cannot disagree.
         if attr == "text_feature":
             continue
-        try:
-            object.__setattr__(ext, "device", device)
-            LOGGER.info("[native] %s.device -> %s", attr, device)
-        except Exception as e:  # noqa: BLE001
-            LOGGER.warning("[native] could not set %s.device: %r", attr, e)
+        _retarget(ext, attr)
     return device
 
 
