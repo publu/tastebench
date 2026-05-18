@@ -33,6 +33,10 @@ model-cache/
 *.pt
 *.ckpt
 
+# --- worker workspace (created at runtime; media/reports are user content) ---
+*.report.md
+/workspace/
+
 # --- python ---
 __pycache__/
 *.pyc

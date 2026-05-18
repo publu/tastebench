@@ -7,7 +7,11 @@ name = "tastebench"
 version = "0.1.0"
 description = "Learn the taste signature of media you admire, then see how your demo diverges and what to change."
 readme = "README.md"
-requires-python = ">=3.11,<3.13"
+# Core (craft layer) installs on any modern Python. The optional `brain`
+# extra (torch/tribev2/whisperx) is the thing that wants 3.11–3.12 — that
+# constraint lives on `make brain` / the docs, not on the whole project,
+# so a fresh clone is never dead-on-arrival on a 3.13+ box.
+requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Pablo", email = "pablo@hashingsystems.com" }]
 keywords = ["music", "audio", "taste", "tribe", "librosa", "creative-tools"]
