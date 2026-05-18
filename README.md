@@ -1,25 +1,63 @@
-# tastebench
+```
+╭───────────────────────────────────────╮
+│    █████   ███    ████  █████  █████  │
+│      █    █   █  █        █    █      │
+│      █    █████   ███     █    ███    │
+│      █    █   █      █    █    █      │
+│      █    █   █  ████     █    █████  │
+│                                       │
+│    ████   █████  █   █   ████  █   █  │
+│    █   █  █      ██  █  █      █   █  │
+│    ████   ███    █ █ █  █      █████  │
+│    █   █  █      █  ██  █      █   █  │
+│    ████   █████  █   █   ████  █   █  │
+╰───────────────────────────────────────╯
+```
 
-**You have a draft. You have a few things you wish it felt like. tastebench
-tells you exactly where yours is off — and what to change first.**
+# Your own focus group for your drafts
 
-Working alone, the hardest question is *"is this there yet?"* Not "is this
-good in the abstract" — *does it hit the way the stuff I love hits?* Normally
-you find out by sitting on it, sending it around, and waiting. tastebench is
-that gut-check in seconds, on your machine, before anyone else hears it.
+You have a draft. You have a few things you wish it felt like.
+**tastebench tells you exactly where yours is off — and what to change first.**
+
+Working alone, the hardest question is *"is this there yet?"* — not "is
+this good in the abstract," but *does it hit the way the stuff I love
+hits?* Normally you find out by sitting on it, sending it around, and
+waiting. tastebench is that gut-check in **seconds, on your machine**,
+before anyone else hears it.
 
 Point it at a handful of **references** — the work you wish yours felt
-like: tracks, videos, or images you admire. It learns the *taste* they
-share: for music, the
-song-bones (when the hook lands, how it loops, tempo and key stability,
-how the chorus lifts, dynamics); for video and images, colour, contrast,
-palette, composition, and — for video — cut pacing and motion. Then you
-drop your **draft**. It tells you, in plain language: how close you are,
-which reference you're nearest, and a **ranked list of fixes** — biggest
-lever first, each labelled with how confident it is and how to act on it.
+like (tracks, videos, images). It learns the *taste* they share. Drop
+your **draft**. It tells you, in plain language, how close you are, which
+reference you're nearest, and a **ranked list of fixes** — biggest lever
+first, each with a confidence label and how to act:
 
-It's your own focus group for your drafts. A second pair of ears when
-you don't have one on call.
+```
+── synthwave · demo.wav ──────────────────
+
+  DIFFERENT RECORD — 11% taste match
+
+  TASTE MATCH  [███·····················]  11%
+
+  ▸ the one thing: your hook shows up at 11.3s — the refs land theirs by
+    ~4s; most listeners are gone before your best moment.
+  · closest to ref_b.wav of your set
+```
+
+No dashboards, no score out of ten, no engagement-bait. It measures
+*distance to a taste **you** chose* and hands you the levers — and it
+**does not predict hits** (those are irreducibly noisy; Salganik et al.,
+*Science* 2006). That honesty is the point.
+
+### Try it in 30 seconds
+
+```bash
+git clone https://github.com/publu/tastebench && cd tastebench
+make     # tiny model-free venv, then it starts watching a folder
+```
+
+Drop references into `references/<name>/refs/` and your draft into
+`…/draft/`. It grades on drop and writes a report next to it. No commands
+to learn, nothing to configure, nothing gated to download.
 
 ### What you can use it for
 
@@ -38,10 +76,6 @@ you don't have one on call.
 - **Briefing an LLM with real numbers.** `--llm` emits a self-contained
   bundle (raw analysis + full glossary) you paste into any model for a
   grounded, no-hallucination breakdown.
-
-It does **not** predict hits — hit outcomes are irreducibly noisy (Salganik
-et al., *Science* 2006). It measures *distance to a taste you chose*, says
-it in words, and hands you the levers. That honesty is the point.
 
 > **Licensing (read before any non-personal use).** This wrapper is MIT,
 > but it runs on Meta's **TRIBE v2** (CC-BY-NC-4.0, *NonCommercial*) and
