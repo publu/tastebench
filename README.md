@@ -30,7 +30,36 @@ It does **not** predict hits. Hit outcomes are irreducibly noisy (Salganik
 et al., *Science* 2006). tastebench measures *distance to a taste you
 defined*, says it in words, and hands you levers. Honesty is a feature.
 
-## The reference → demo flow
+## The worker (zero CLI — the default)
+
+Run one thing and never type a verb again:
+
+```bash
+tastebench            # creates ./tastebench/ and watches it
+```
+
+It lays out and watches a folder tree. One folder per taste; whatever is
+in `refs/` defines that taste, whatever is in `draft/` gets graded against
+it:
+
+```
+tastebench/references/
+  my-sound/
+    refs/    ← drop a few tracks/videos/images you ADMIRE here
+    draft/   ← drop YOUR draft here → graded automatically
+```
+
+Drop files in and watch: the worker learns the taste, grades each draft
+against it live, and writes a full `<draft>.report.md` next to the taste.
+Make as many `references/<name>/` folders as you like — they're
+independent. It's poll-based and settle-aware (a half-copied or
+multi-file drag never triggers a partial run) and re-grades automatically
+when anything changes. The brain layer turns on by itself when the
+weights are present (offered as a background download on first run).
+
+## The reference → demo flow (explicit CLI)
+
+The verbs still exist for scripting and one-shots:
 
 ```
 tastebench profile  ref1.wav ref2.wav ref3.wav            # what you like
@@ -38,6 +67,7 @@ tastebench compare  ref1.wav ref2.wav --to demo.wav       # how you diverge
 tastebench optimize demo.wav --toward ref1.wav ref2.wav   # ranked edits
 tastebench glossary [TERM]                                # the dictionary
 tastebench tui      ref1.wav ref2.wav --demo demo.wav     # the visual view
+tastebench drop                                           # legacy drop prompt
 ```
 
 Add `--llm` to any analysis command to get a self-contained bundle (raw
@@ -64,31 +94,56 @@ It won't be perfect — every brain is different — but once you've profiled
 the response your references share, you can push your song, video, or image
 toward that vibe on purpose instead of guessing.
 
-## Quickstart
+## Quickstart — clone, then `make`
 
 ```bash
 git clone <this repo> && cd tastebench
-python -m venv .venv && source .venv/bin/activate
-pip install -e ".[brain]"          # core + torch + Meta's tribev2 stack
-huggingface-cli login              # accept Meta's Llama 3.2 license (gated)
-python scripts/download_models.py  # ~20 GB → ~/.cache/tastebench
+make            # builds .venv (core deps only), launches the worker on ./workspace
+```
 
-python examples/make_examples.py   # lawful synthetic clips (no media shipped)
-tastebench compare  examples/ref_a.wav examples/ref_b.wav --to examples/demo.wav
-tastebench optimize examples/demo.wav --toward examples/ref_a.wav examples/ref_b.wav
+That's the whole thing. `make` needs only `python3`; the core install is
+model-free (numpy/librosa/rich — no torch, sub-second) so there's nothing
+to download and nothing gated. The worker then prints a folder to drop
+files into. Drop references in `workspace/references/<name>/refs/` and a
+draft in `…/draft/` → it grades automatically and writes a report.
+
+Other entry points (all equivalent — no install needed for `-m`):
+
+```bash
+python -m tastebench                      # the worker, no pip install
+python -m tastebench compare a.wav b.wav --to demo.wav
+make test                                 # the model-free smoke suite
+make brain                                # add the optional ~20 GB TRIBE stack
 ```
 
 `ffmpeg` must be on PATH to read non-WAV audio.
 
-### Craft-only (no model)
+### Manual setup (no make)
 
 ```bash
+python -m venv .venv && source .venv/bin/activate
 pip install -e .                   # core only: numpy, librosa, soundfile, rich
+tastebench                         # the worker (from any dir but the repo root)
+# or a one-shot, model-free:
+python examples/make_examples.py   # lawful synthetic clips (no media shipped)
 tastebench compare examples/ref_a.wav examples/ref_b.wav \
     --to examples/demo.wav --no-brain
 ```
 
-Sub-second, no download — the same flow without the brain layer.
+### The brain layer (optional, heavier)
+
+```bash
+make brain                         # core + torch + Meta's tribev2 stack
+huggingface-cli login              # accept Meta's Llama 3.2 license (gated)
+.venv/bin/python scripts/download_models.py   # ~20 GB → ~/.cache/tastebench
+```
+
+The brain stack (torch / tribev2 / whisperx) wants **Python 3.11–3.12**;
+`make` auto-picks a compatible interpreter if one is on PATH (override with
+`make PY=python3.12`). The model-free core has no such limit and installs on
+3.13+ too. The worker flips to the brain layer automatically once the
+weights exist; until then everything runs craft-only. None of this is
+required to use the tool.
 
 ### Hardware reality (read this)
 
@@ -139,6 +194,54 @@ isn't installed.
 The brain layer is a *hypothesis view* — it reports a *predicted* neural
 response, not a validated outcome — and the tool says so wherever it
 appears. Brains differ; this profiles a response *pattern*, not a verdict.
+
+## Why it's faster than vanilla TRIBE v2
+
+Upstream `tribev2` assumes a single CUDA box; run as-is on a Mac it is
+slow or fails outright. `tastebench/native.py` and
+`tastebench/fast_text.py` are an in-process adaptation layer that runs the
+same pipeline with the same numerics. Every change is opt-out via env
+vars, so the CUDA path is unchanged.
+
+- **Llama word embeddings** (`fast_text.py`) — ~15–40× on the audio path,
+  from three stacked changes: load Llama-3.2 in bf16 instead of the fp32
+  default (2–3×); one forward pass per *unique sentence* instead of per
+  *word*, since consecutive word events share a sentence (5–10×);
+  `sdpa`/`flash_attention_2` instead of the eager kernel (1.3–2×); plus
+  optional cross-sentence batching (weights streamed from memory once per
+  batch — the workload is memory-bandwidth bound on MPS). The per-token
+  slice math is byte-identical to upstream (Llama is a causal decoder, so
+  a word's hidden states don't depend on later tokens);
+  `TRIBE_FAST_TEXT_BATCH=0` is an exact revert.
+- **Apple-Silicon execution** (`native.py`) — upstream resolves
+  `device="auto"` to cuda/cpu only and its pydantic device `Literal`
+  cannot take `mps`. This retargets the lazily-loaded extractors and the
+  brain model onto MPS, with CPU fallback for the ops lacking a Metal
+  kernel.
+- **macOS spawn-safe DataLoader** — upstream ships `num_workers: 20`
+  (tuned for a Linux GPU box). macOS uses *spawn*, so each worker does a
+  fresh interpreter import and reloads Llama/w2v-bert, pegging a core for
+  minutes and parking the parent in an OpenMP fork barrier (the
+  predict-stage hang). Forced to single-process.
+- **In-process, cached ASR** — upstream shells out to `uvx whisperx
+  --device cuda --compute_type float16` every run: it re-resolves the
+  package from PyPI and fails on Apple Silicon (no CUDA; CTranslate2-CPU
+  has no float16). Replaced with an in-process call to a cached whisperx
+  (corr ≈ 0.999 vs. the upstream transcript), with an optional Apple-GPU
+  `mlx-whisper` path.
+- **Fewer network/disk round-trips** — `HF_HUB_OFFLINE` stops
+  huggingface_hub making a per-model online etag call on every cached
+  weight (an observed multi-minute SSL stall); `TORCH_HOME`/`HF_HOME` are
+  pinned so the 1.2 GB wav2vec2 align checkpoint resolves from cache
+  instead of re-downloading; the on-disk per-event cache (≈0% hit rate
+  across tracks) is disabled, keeping only the in-track RAM dedupe.
+
+Above the engine, the worker caches a taste profile per reference-set
+signature and only re-grades a draft when it or the refs changed, so
+TRIBE does not re-run on unchanged inputs; the sub-second craft layer
+answers while the brain layer is downloading or between drops.
+`tastebench/timing.py` prints a per-stage wall-time breakdown
+(`TRIBE_TIMING`, default on).
 
 ## How the numbers work (transparent by design)
 
