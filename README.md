@@ -1,65 +1,84 @@
 # tastebench
 
-**Learn the taste signature of media you admire — then see exactly how your
-own demo diverges, and what to change.**
+**You have a draft. You have a few things you wish it felt like. tastebench
+tells you exactly where yours is off — and what to change first.**
 
-> ⚠️ **Non-commercial — research / personal creative use only.**
-> tastebench's own code is MIT, but it runs on Meta's **TRIBE v2 model,
-> which is licensed CC-BY-NC-4.0 (NonCommercial)**. The MIT license on this
-> wrapper does **not** grant commercial rights to the model it depends on, so
-> the tool *as a whole* may not be used commercially. See
-> [LICENSE](LICENSE), [NOTICE](NOTICE), and [ATTRIBUTION.md](ATTRIBUTION.md).
->
-> **Built with Llama.** The brain layer uses Llama 3.2 — *"Llama 3.2 is
-> licensed under the Llama 3.2 Community License, Copyright © Meta Platforms,
-> Inc. All Rights Reserved."*
+Working alone, the hardest question is *"is this there yet?"* Not "is this
+good in the abstract" — *does it hit the way the stuff I love hits?* Normally
+you find out by sitting on it, sending it around, and waiting. tastebench is
+that gut-check in seconds, on your machine, before anyone else hears it.
 
-You give tastebench a few **reference** tracks (or videos/images) you think
-are great — music, video, or images. It computes the *taste signature* of
-what they share — a model-free **craft fingerprint** (for music: hook
-timing, loopability, tempo, key stability, dynamics; for video & images:
-colour scheme, contrast, saturation, palette, composition — plus cut pacing
-and motion for video) and, optionally, a 12-network *brain-response*
-signature from Meta's TRIBE model.
-Then you give it your own **demo**. It tells you, in plain musical language,
-where the demo is off your taste, how far, which reference it's nearest to,
-and a **ranked, confidence-labeled edit list** to move it toward the taste —
-each edit attached to a glossary entry explaining what it is and how to act.
+Point it at a handful of **references** — tracks, videos, or images you'd
+kill to have made. It learns the *taste* they share: for music, the
+song-bones (when the hook lands, how it loops, tempo and key stability,
+how the chorus lifts, dynamics); for video and images, colour, contrast,
+palette, composition, and — for video — cut pacing and motion. Then you
+drop your **draft**. It tells you, in plain language: how close you are,
+which reference you're nearest, and a **ranked list of fixes** — biggest
+lever first, each labelled with how confident it is and how to act on it.
 
-It does **not** predict hits. Hit outcomes are irreducibly noisy (Salganik
-et al., *Science* 2006). tastebench measures *distance to a taste you
-defined*, says it in words, and hands you levers. Honesty is a feature.
+It's a private focus group for unfinished work. A second pair of ears when
+you don't have one on call.
 
-## The worker (zero CLI — the default)
+### What you can use it for
 
-Run one thing and never type a verb again:
+- **Finishing a track.** "I want this to hit like these three records —
+  where am I off?" Get back: hook lands 11s in (theirs land at 4s), it
+  doesn't loop clean, dynamics are flat — *fix the hook timing first.*
+- **A/Bing a decision.** Two arrangement or mix versions, same references
+  — which one is actually closer to the target, by how much, on which
+  signals.
+- **A standing taste check.** Keep a folder of your favourite references;
+  drop every WIP in; get an instant read before you send it to the artist
+  or post it.
+- **Matching a visual reference.** Hit the palette, contrast, and
+  composition of a moodboard; match the cut pacing and motion energy of
+  an edit you admire.
+- **Briefing an LLM with real numbers.** `--llm` emits a self-contained
+  bundle (raw analysis + full glossary) you paste into any model for a
+  grounded, no-hallucination breakdown.
+
+It does **not** predict hits — hit outcomes are irreducibly noisy (Salganik
+et al., *Science* 2006). It measures *distance to a taste you chose*, says
+it in words, and hands you the levers. That honesty is the point.
+
+> **Licensing (read before any non-personal use).** This wrapper is MIT,
+> but it runs on Meta's **TRIBE v2** (CC-BY-NC-4.0, *NonCommercial*) and
+> **Llama 3.2** (Llama 3.2 Community License). The tool *as a whole* is
+> **non-commercial — research / personal creative use only**. See
+> [LICENSE](LICENSE), [NOTICE](NOTICE), [ATTRIBUTION.md](ATTRIBUTION.md).
+
+## Use it: drop files in a folder
+
+Run one thing. No commands to learn:
 
 ```bash
 tastebench            # creates ./tastebench/ and watches it
 ```
 
-It lays out and watches a folder tree. One folder per taste; whatever is
-in `refs/` defines that taste, whatever is in `draft/` gets graded against
-it:
+It creates and watches a folder tree. One folder per taste — whatever you
+put in `refs/` defines that taste, whatever you put in `draft/` gets
+graded against it:
 
 ```
 tastebench/references/
   my-sound/
-    refs/    ← drop a few tracks/videos/images you ADMIRE here
-    draft/   ← drop YOUR draft here → graded automatically
+    refs/    ← a few tracks/videos/images you ADMIRE
+    draft/   ← your draft → graded the moment it lands
 ```
 
-Drop files in and watch: the worker learns the taste, grades each draft
-against it live, and writes a full `<draft>.report.md` next to the taste.
-Make as many `references/<name>/` folders as you like — they're
-independent. It's poll-based and settle-aware (a half-copied or
-multi-file drag never triggers a partial run) and re-grades automatically
-when anything changes. The brain layer turns on by itself when the
-weights are present (offered as a background download on first run).
+Drop files in and watch. The worker learns the taste, grades each draft
+against it live in the terminal, and writes a full `<draft>.report.md`
+next to it. Make as many `references/<name>/` folders as you want —
+they're independent. It's settle-aware (a half-copied or multi-file drag
+never triggers a partial run) and re-grades automatically when anything
+changes. The neural layer switches on by itself once its weights are
+present (offered as a background download on first run); until then you
+get the instant craft read.
 
-## The reference → demo flow (explicit CLI)
+## Scripting it: the CLI
 
-The verbs still exist for scripting and one-shots:
+Every step is also a plain command, for pipelines and one-shots:
 
 ```
 tastebench profile  ref1.wav ref2.wav ref3.wav            # what you like
@@ -75,29 +94,10 @@ numbers + the **full explainer glossary** + a framing question) you can
 paste into any LLM for a deeper, grounded explanation. Add `--format json`
 for machine output, `-o FILE` to write to disk.
 
-## What it does
-
-**It's a private focus group for your drafts.**
-
-Hand it a few things you wish your work felt like — tracks, videos, or
-images you admire — plus your own rough draft. tastebench simulates how a
-listener's brain reacts to each, learns the specific *vibe* your references
-share, and shows you where your draft misses it and what to change to close
-the gap.
-
-It's the second pair of ears you don't always have: a quick way to check
-you're heading the right direction and tighten the work *before* you show
-friends or launch. Not "does this grab people" in general — but "does this
-hit the exact response the stuff I love hits."
-
-It won't be perfect — every brain is different — but once you've profiled
-the response your references share, you can push your song, video, or image
-toward that vibe on purpose instead of guessing.
-
-## Quickstart — clone, then `make`
+## Install — clone, then `make`
 
 ```bash
-git clone <this repo> && cd tastebench
+git clone https://github.com/publu/tastebench && cd tastebench
 make            # builds .venv (core deps only), launches the worker on ./workspace
 ```
 
