@@ -1,11 +1,18 @@
 """tastebench.cli — the command-line entry point.
 
+    tastebench                               the folder worker (default)
+    tastebench worker [DIR]                  the folder worker, explicitly
+    tastebench drop                          the drag-into-terminal prompt
     tastebench vibe      <demo> --like <refs...>    one-command verdict
     tastebench profile  <refs...>            build a taste signature
     tastebench compare   <refs...> --to <demo>   demo vs taste
     tastebench optimize  <demo> --toward <refs...>  ranked edits
     tastebench glossary  [TERM]              the explainer dictionary
     tastebench tui       ...                 the product TUI
+
+Bare `tastebench` launches the **worker**: it creates and watches a
+`tastebench/references/<name>/{refs,draft}/` tree and auto-grades every
+draft against that taste's refs — no CLI verbs to learn.
 
 `vibe` is the fast path: one screen — verdict + the single biggest lever.
 Add `--deep` for the full report or `--fix` for the ranked edit list.
@@ -123,6 +130,23 @@ def build_parser() -> argparse.ArgumentParser:
         "--json", action="store_true", help="emit the raw glossary JSON"
     )
 
+    p_wk = sub.add_parser(
+        "worker", help="watch a references/<name>/{refs,draft}/ tree and "
+        "auto-grade (the default when you run bare `tastebench`)"
+    )
+    p_wk.add_argument(
+        "root", nargs="?", default=None,
+        help="working dir to create/watch (default: ./tastebench)",
+    )
+    p_wk.add_argument(
+        "--no-brain", action="store_true",
+        help="craft layer only; never use / download the TRIBE model",
+    )
+
+    sub.add_parser(
+        "drop", help="the legacy drag-files-into-the-terminal prompt"
+    )
+
     p_tui = sub.add_parser(
         "tui", help="interactive TUI (omit refs); or pass refs for a one-shot view"
     )
@@ -148,8 +172,19 @@ def _emit(text: str, out: str | None) -> None:
         print(text)
 
 
+def _launch_worker(root=None, use_brain=None) -> int:
+    """Bare `tastebench` → the folder worker.
+
+    The default experience: run it once, drop files into the
+    `references/<name>/{refs,draft}/` tree it creates, and drafts get
+    graded automatically. No CLI verbs to learn."""
+    from .worker import run
+
+    return run(root, use_brain=use_brain)
+
+
 def _launch_interactive() -> int:
-    """Bare `tastebench` → the drop prompt.
+    """`tastebench drop` → the legacy drop prompt.
 
     A *line prompt*, not a full-screen app, on purpose: a Finder file-drag
     only pastes its path at a prompt, never into an alt-screen TUI — so
@@ -165,6 +200,14 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
 
     if args.cmd is None:
+        return _launch_worker()
+
+    if args.cmd == "worker":
+        return _launch_worker(
+            args.root, use_brain=False if args.no_brain else None
+        )
+
+    if args.cmd == "drop":
         return _launch_interactive()
 
     if args.cmd == "glossary":
