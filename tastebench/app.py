@@ -50,7 +50,7 @@ BANNER = """\
 │    █   █  █      █  ██  █      █   █  │
 │    ████   █████  █   █   ████  █   █  │
 ╰───────────────────────────────────────╯
-[dim] a private focus group for your drafts
+[dim] Your own focus group for your drafts
  ∿╱╲∿_╱╲∿╱╲__╱╲∿╱╲∿  drop references, then grade your draft[/dim]"""
 
 _AUDIO = {".wav", ".mp3", ".flac", ".m4a", ".ogg", ".aac", ".opus"}

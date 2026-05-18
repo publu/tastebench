@@ -8,8 +8,9 @@ good in the abstract" — *does it hit the way the stuff I love hits?* Normally
 you find out by sitting on it, sending it around, and waiting. tastebench is
 that gut-check in seconds, on your machine, before anyone else hears it.
 
-Point it at a handful of **references** — tracks, videos, or images you'd
-kill to have made. It learns the *taste* they share: for music, the
+Point it at a handful of **references** — the work you wish yours felt
+like: tracks, videos, or images you admire. It learns the *taste* they
+share: for music, the
 song-bones (when the hook lands, how it loops, tempo and key stability,
 how the chorus lifts, dynamics); for video and images, colour, contrast,
 palette, composition, and — for video — cut pacing and motion. Then you
@@ -17,7 +18,7 @@ drop your **draft**. It tells you, in plain language: how close you are,
 which reference you're nearest, and a **ranked list of fixes** — biggest
 lever first, each labelled with how confident it is and how to act on it.
 
-It's a private focus group for unfinished work. A second pair of ears when
+It's your own focus group for your drafts. A second pair of ears when
 you don't have one on call.
 
 ### What you can use it for

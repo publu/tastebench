@@ -36,7 +36,7 @@ from pathlib import Path
 
 # Reuses flow's media-extension set + background-download helper, and (as a
 # side effect of import) its M-series-faithful env defaults.
-from .flow import _MEDIA, _DL
+from .flow import _MEDIA, _DL, BANNER
 
 DEFAULT_ROOT = "tastebench"
 _REPORT_SUFFIX = ".report.md"
@@ -263,10 +263,8 @@ def run(root: str | Path | None = None, use_brain: bool | None = None) -> int:
     auto = use_brain if use_brain is not None else have
     dl: _DL | None = None
 
-    console.print(
-        "[bold cyan]tastebench worker[/] "
-        "[grey50]· a private focus group for your drafts[/]\n"
-    )
+    console.print(BANNER)
+    console.print()
     console.print(f"[b]Watching[/] [cyan]{root}[/]\n")
     console.print(
         "Make a folder per taste under "

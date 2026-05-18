@@ -58,7 +58,7 @@ BANNER = """\
 │    █   █  █      █  ██  █      █   █  │
 │    ████   █████  █   █   ████  █   █  │
 ╰───────────────────────────────────────╯[/]
-[dim] a private focus group for your drafts[/]"""
+[dim] Your own focus group for your drafts[/]"""
 
 
 _PASTE_START = b"\x1b[200~"
