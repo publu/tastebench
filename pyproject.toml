@@ -52,6 +52,11 @@ mlx = ["mlx-whisper"]
 # silent mp4 that the video path then grades. Not a core dep (like the
 # brain layer). One-time browser fetch: `playwright install chromium`.
 web = ["playwright>=1.40"]
+# Remote brain layer. Just the client SDK that drives
+# `modal run tastebench/modal_app.py`; the heavy brain deps (the [brain]
+# extra) are installed inside the Modal image. See README "Run the brain
+# layer on Modal".
+modal = ["modal"]
 dev = ["pytest"]
 
 [project.scripts]

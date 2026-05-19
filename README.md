@@ -206,6 +206,28 @@ The brain stack (torch / tribev2 / whisperx) wants **Python 3.11–3.12**;
 weights exist; until then everything runs craft-only. None of this is
 required to use the tool.
 
+### Run the brain layer on Modal
+
+No GPU and don't want minutes-per-clip on a Mac? Run the brain layer on
+[Modal](https://modal.com). It's self-serve: `modal setup` uses your own
+account, the ~20 GB cache lives in a Modal Volume in your workspace, and
+gated Llama-3.2 uses a HF token you add as a Modal Secret.
+
+```bash
+pip install -e ".[modal]"                         # just the client SDK
+modal setup                                       # once: your account
+modal secret create huggingface HF_TOKEN=hf_xxx   # once: gated Llama-3.2
+modal run tastebench/modal_app.py::download       # once: warm the Volume (~20 GB)
+modal run tastebench/modal_app.py \
+    --demo demo.wav --refs ref_a.wav,ref_b.wav    # the verdict, on a GPU
+```
+
+Same engine as local — `compare()` with the brain layer on, just on a
+CUDA box (full upstream fidelity: 64 video frames, full res). Add
+`--deep` for the full report, `--llm` for the LLM bundle. If a large
+video OOMs the default A10G, `TASTEBENCH_MODAL_GPU=A100 modal run …`.
+The local `make` / `tastebench` paths are untouched.
+
 ### Hardware reality (read this)
 
 - **~20 GB** model cache (fMRI encoder + Llama-3.2-3B + Whisper + wav2vec2).
