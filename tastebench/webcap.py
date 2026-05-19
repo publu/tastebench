@@ -24,9 +24,32 @@ import time
 from pathlib import Path
 
 _DEFAULT_SECONDS = 12.0
+# Browser *viewport* — the page must lay out like a real desktop so its
+# visual signature (density, layout, contrast) is the real thing.
 _DEFAULT_W = 1280
 _DEFAULT_H = 720
 _DEFAULT_FPS = 24
+# The recorded *video* is a separate size. The TRIBE video extractor
+# (`vjepa2-vitg-fpc64-256`) is natively 256 px; recording at full 720p
+# just feeds it pixels it throws away — and on a CUDA / >=128 GiB box the
+# engine's RAM-aware cap is intentionally off, so those wasted frames go
+# in at full res (issue #1). So we render the page large but record the
+# video downscaled to the encoder's native short side. 0 disables it.
+_ENCODER_PX = 256
+
+
+def _record_size(vw: int, vh: int, cap: int = _ENCODER_PX) -> dict:
+    """Viewport (vw, vh) -> recorded video size, short side capped to
+    ``cap``, aspect preserved, both dims even (libx264 yuv420p needs it).
+    ``cap <= 0`` records at the viewport size (full fidelity)."""
+    if cap <= 0 or min(vw, vh) <= cap:
+        rw, rh = vw, vh
+    else:
+        scale = cap / float(min(vw, vh))
+        rw, rh = round(vw * scale), round(vh * scale)
+    rw -= rw & 1
+    rh -= rh & 1
+    return {"width": max(2, rw), "height": max(2, rh)}
 
 _SETUP_HINT = (
     "Web QA needs a browser engine (not a core dep, like the brain layer):\n"
@@ -61,12 +84,19 @@ def capture_site(
     width: int = _DEFAULT_W,
     height: int = _DEFAULT_H,
     fps: int = _DEFAULT_FPS,
+    record_px: int = _ENCODER_PX,
 ) -> Path:
     """Record ``url`` to a silent mp4 and return its path.
 
     ``seconds`` is the total capture/scroll duration. The page is loaded,
     given a moment to settle, then smooth-scrolled top→bottom over the
     window so the recording sweeps the whole page. No audio is recorded.
+
+    The page renders at ``width``×``height`` (desktop layout) but the
+    recorded video is downscaled so its short side is ``record_px``
+    (default 256, the TRIBE video encoder's native size) — this stops
+    every brain path, including the uncapped CUDA / ≥128 GiB one, from
+    ingesting wasted full-res frames. ``record_px=0`` records full size.
 
     Raises ``WebCaptureUnavailable`` if Playwright (and its chromium
     build) or ffmpeg are missing, ``ValueError`` for a non-http(s) URL.
@@ -92,7 +122,11 @@ def capture_site(
                 context = browser.new_context(
                     viewport={"width": width, "height": height},
                     record_video_dir=str(vdir),
-                    record_video_size={"width": width, "height": height},
+                    # Page lays out at full viewport; the recording is
+                    # downscaled to the encoder's native scale so no path
+                    # (incl. CUDA / >=128 GiB) is fed wasted full-res
+                    # frames (issue #1). record_px<=0 keeps full size.
+                    record_video_size=_record_size(width, height, record_px),
                 )
                 page = context.new_page()
                 page.goto(url, wait_until="load", timeout=60_000)
