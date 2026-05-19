@@ -19,11 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-----------------------------------------------------------------------------
-
-This MIT license covers the tribe-taste source in this repository only.
-It does NOT relicense any third-party dependency. The TRIBE brain model
-(facebookresearch/tribev2), Llama-3.2, and Whisper are separate works under
-their own licenses and are NOT redistributed here — they are downloaded by
-the user. See ATTRIBUTION.md and NOTICE.

@@ -2,11 +2,12 @@
 
 `level-up-v4.mp3` is a finished 320 kbps track (2:38) — the author's own
 work, owned by the author. It's the one piece of audio the repo ships,
-solely so the read below is reproducible from a clone.
+so you can run this read yourself instead of taking a screenshot's word
+for it.
 
-Below is tastebench's real read of it — ASR, Llama-3.2 word embeddings,
-w2v-BERT audio features, the TRIBE fMRI-encoder forward pass — run
-**locally on a 32 GB M1 laptop, no GPU, in ~4m40s**:
+Below is one real run — ASR, Llama-3.2 word embeddings, w2v-BERT audio
+features, the TRIBE fMRI-encoder forward pass — **locally on a 32 GB M1
+laptop, no GPU, in ~4m40s**:
 
 ```
 whisperx ASR (transcript)        172.0s
@@ -16,6 +17,11 @@ TRIBE forward + model load       ~31s
 ────────────────────────────────────────
 total                          ~4m 39s   (158s of audio)
 ```
+
+These are figures from *one* run. ASR sampling and thread/op ordering
+make the low digits and the wall-clock drift run to run and box to box —
+don't expect them to the decimal. What's stable is the *shape* (which
+networks dominate, the reliability pattern); that's what the read is.
 
 ## The neural read — predicted 12-network response
 
