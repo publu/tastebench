@@ -24,21 +24,10 @@ first — then keeps doing it on everything you drop after.
 No "is this good in the abstract." No "will it go viral." Just: how far
 is this from the taste I picked, and which lever closes the gap.
 
-```
-── synthwave · demo.wav ──────────────────
-
-  DIFFERENT RECORD — 11% taste match
-
-  TASTE MATCH  [███·····················]  11%
-
-  ▸ the one thing: your hook shows up at 11.3s — the refs land theirs by
-    ~4s; most listeners are gone before your best moment.
-  · closest to ref_b.wav of your set
-```
-
-That's the craft read. Underneath it, the same drop gets a neural read —
-the predicted brain response, the part no waveform shows you. Here it is
-on a real released track, computed locally, no GPU:
+It runs every drop through TRIBE — Meta's fMRI-encoding model — and
+reads out the brain response it predicts: a 12-network signature, the
+part no waveform or histogram shows you. On a real released track,
+computed locally, no GPU:
 
 ```
  level-up-v4.mp3 · 2:38 · full neural read in ~4m40s on an M1, no GPU
@@ -54,9 +43,22 @@ on a real released track, computed locally, no GPU:
  a predicted response pattern, not a verdict · full read → demo/
 ```
 
-This track reads as motion / attention / body, stable end to end, with
-the rest flat — that *shape* is the taste. Your references define the
-shape to hit; your draft is scored by how far its shape sits from theirs.
+That *shape* — motion / attention / body, stable end to end, the rest
+flat — is the taste. Your references define the shape to hit; your draft
+is scored by how far its shape sits from theirs. The answer comes back
+in plain language:
+
+```
+── synthwave · demo.wav ──────────────────
+
+  DIFFERENT RECORD — 11% taste match
+
+  TASTE MATCH  [███·····················]  11%
+
+  ▸ the one thing: your hook shows up at 11.3s — the refs land theirs by
+    ~4s; most listeners are gone before your best moment.
+  · closest to ref_b.wav of your set
+```
 
 ## Run one thing
 
@@ -128,12 +130,12 @@ layers:
 | **Craft** | concrete, fixable features — librosa for audio (hook timing, loopability, chorus lift, tempo/key stability, dynamics); a PIL path for video/image (palette, contrast, composition, cut pacing, motion) | No — sub-second | audio · video · image |
 
 References define a target signature; your draft is scored by how far it
-sits from it, network by network and feature by feature. The craft layer
-**needs no download and answers instantly**; the brain layer **turns on
-by itself** once its weights are present (until then you get the full
-craft read). The brain layer is a *hypothesis view* — a predicted neural
-response, not a validated outcome — and the tool says so wherever it
-appears.
+sits from it, network by network and feature by feature. The brain layer
+is the read — one model, every modality, the thing nothing else gives
+you; it is a *hypothesis view* (a predicted neural response, not a
+validated outcome) and the tool says so wherever it appears. The craft
+layer runs alongside it, model-free and instant, and is the full
+standalone read on a machine that hasn't pulled the model yet.
 
 ## The CLI — every step is also a plain command
 
@@ -156,7 +158,7 @@ units, how to act. Every `compare`/`optimize` line carries its entry;
 `report --llm` embeds the whole dictionary. Browse it with `tastebench
 glossary`.
 
-## The brain layer (optional, heavier)
+## Set up the neural read (the ~20 GB model)
 
 ```bash
 make brain                                  # core + torch + Meta's tribev2 stack
@@ -167,9 +169,10 @@ huggingface-cli login                       # accept Meta's Llama 3.2 license (g
 ~20 GB cache (fMRI encoder + Llama-3.2-3B + Whisper + wav2vec2). Runs on
 **Apple Silicon (MPS) or CUDA**, auto-detected — minutes per clip on a
 Mac, fast on a GPU. The brain stack wants **Python 3.11–3.12** (`make`
-auto-picks one; the model-free core has no such limit). Nothing here is
-required: without the cache the package still imports and falls back to
-the instant craft read.
+auto-picks one; the model-free core has no such limit). Nothing is gated
+on this download — until the weights land a fresh clone still runs on
+the model-free layer — and the neural read is on the moment they're
+present.
 
 **No GPU?** Run the brain layer on your own [Modal](https://modal.com):
 
