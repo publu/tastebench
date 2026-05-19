@@ -57,6 +57,17 @@ _BRAIN_CTA = (
     "one-time) to unlock your taste's neural fingerprint"
 )
 
+_BANDED_WARN = (
+    "⚠ BRAIN ROI FALLBACK — upstream HCP labels were unavailable, so the "
+    "360 ROIs are equal-width vertex bands and the 12-network split is "
+    "geometrically approximate. Read the neural numbers as indicative "
+    "only, not as a precise per-network map."
+)
+
+
+def _banded(payload: dict) -> bool:
+    return payload.get("brain_roi_banded") is True
+
 
 def to_json(payload: dict, indent: int = 2) -> str:
     return json.dumps(payload, indent=indent, default=str)
@@ -111,6 +122,8 @@ def to_markdown(payload: dict) -> str:
         netk = [k for k in p["centroid"] if k.startswith("net.")]
         if netk:
             out.append("\n## The neural side (12-network, hypothesis view)\n")
+            if _banded(p):
+                out.append(f"> {_BANDED_WARN}\n")
             out.append("| signal | center | spread |")
             out.append("|---|---:|---:|")
             for k in netk:
@@ -150,6 +163,8 @@ def to_markdown(payload: dict) -> str:
                                    for r in tight) + ".")
         if c["brain_deltas"]:
             out.append("\n## The neural read (hypothesis view)\n")
+            if _banded(c):
+                out.append(f"> {_BANDED_WARN}\n")
             for r in c["brain_deltas"]:
                 if not r["term"].endswith(".mean"):
                     continue
@@ -316,6 +331,9 @@ def to_verdict(payload: dict) -> str:
         L.append(f"  · closest to {nr['name']} of your set")
     if c.get("demo", {}).get("brain_note"):
         L.append(f"  · {_BRAIN_CTA}")
+    if _banded(c):
+        L.append("  ⚠ brain ROI fallback active — neural read is "
+                 "geometrically approximate (see --deep)")
     L += ["", "  → --deep for the full read   ·   --fix for the ranked "
           "edits", ""]
     return "\n".join(L)

@@ -95,6 +95,21 @@ def signature_for(
     return out
 
 
+def roi_banded(sig: dict) -> Optional[bool]:
+    """Did the brain ROI grouping fall back to the banded approximation?
+
+    ``True``  — upstream HCP labels were unavailable, so the 360 ROIs are
+    equal-width vertex bands and the 12-network (Cole-Anticevic) split is
+    geometrically arbitrary. Callers must surface this loudly.
+    ``False`` — real HCP labels were used. ``None`` — the brain layer did
+    not run, so there is nothing to say.
+    """
+    b = sig.get("brain", {})
+    if not b.get("available"):
+        return None
+    return b.get("signature", {}).get("used_hcp_labels") is False
+
+
 def flatten(sig: dict) -> dict:
     """Combined signature -> flat {key: float|None} vector for centroid /
     distance math. Craft keys are bare names; brain keys are ``net.*``.

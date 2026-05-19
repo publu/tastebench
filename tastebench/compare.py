@@ -21,7 +21,7 @@ from .explainers import get_explainer
 from .features.structural import ACTIONABLE
 from .metric import zdelta
 from .profile import build_profile
-from .signature import flatten, signature_for
+from .signature import flatten, roi_banded, signature_for
 
 # craft features that are production-state rather than song-bones
 _PRODUCTION_STATE = {"brightness", "dynamic_range_db", "flatness"}
@@ -53,6 +53,18 @@ def compare(
         profile = build_profile(profile, use_brain=use_brain)
 
     demo_sig = signature_for(demo, use_brain=use_brain)
+
+    # Did the brain ROI grouping fall back to the banded approximation?
+    # Geometry depends on upstream-label availability (constant per run),
+    # so the demo's flag is authoritative; fall back to a reference's.
+    roi_fallback = roi_banded(demo_sig)
+    if roi_fallback is None:
+        for _s in profile.get("signatures", []):
+            rb = roi_banded(_s)
+            if rb is not None:
+                roi_fallback = rb
+                break
+
     demo_flat = flatten(demo_sig)
     centroid = profile["centroid"]
     spread = profile["spread"]
@@ -114,6 +126,7 @@ def compare(
             "consistency": profile["consistency"],
             "layers": profile["layers"],
         },
+        "brain_roi_banded": roi_fallback,
         "overall_distance": overall,
         "taste_match": match,
         "verdict": _verdict(overall),

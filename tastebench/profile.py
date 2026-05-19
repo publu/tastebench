@@ -12,7 +12,7 @@ import statistics
 from pathlib import Path
 from typing import Iterable
 
-from .signature import flatten, signature_for
+from .signature import flatten, roi_banded, signature_for
 
 
 def _agg(values):
@@ -92,6 +92,12 @@ def build_profile(
     any_brain = any(s["brain"].get("available") for s in sigs)
     any_craft = any(s["craft"].get("available") for s in sigs)
 
+    # Banded-ROI fallback: True if any reference's brain read used the
+    # equal-width approximation (the 12-network split is then geometrically
+    # arbitrary). None when the brain layer didn't run at all.
+    roi_flags = [rb for s in sigs if (rb := roi_banded(s)) is not None]
+    roi_fallback = (any(roi_flags) if roi_flags else None)
+
     return {
         "n_refs": len(refs),
         "refs": ref_meta,
@@ -101,6 +107,7 @@ def build_profile(
         "consistency": consistency,
         "signatures": sigs,
         "layers": {"craft": any_craft, "brain": any_brain},
+        "brain_roi_banded": roi_fallback,
     }
 
 
@@ -114,4 +121,5 @@ def profile_summary(profile: dict) -> dict:
         "n": profile["n"],
         "consistency": profile["consistency"],
         "layers": profile["layers"],
+        "brain_roi_banded": profile.get("brain_roi_banded"),
     }
