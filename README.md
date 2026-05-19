@@ -49,6 +49,9 @@ No dashboards, no score out of ten, no engagement-bait. It measures
 **does not predict hits** (those are irreducibly noisy; Salganik et al.,
 *Science* 2006). That honesty is the point.
 
+See it on a **real released track** — the full neural + craft read,
+computed locally on an M1 in ~4m40s, no GPU: [`demo/`](demo/).
+
 ### Try it in 30 seconds
 
 ```bash
@@ -394,5 +397,8 @@ pip install -e ".[dev]"
 pytest -q              # model-free smoke suite (synthesizes its own audio)
 ```
 
-No audio, secrets, model weights, or large caches are ever committed (see
-`.gitignore`). The repo ships code only.
+No third-party audio, secrets, model weights, or large caches are ever
+committed (see `.gitignore`). The repo ships code only, with one
+deliberate exception: `demo/level-up-v4.mp3` — the author's own track,
+owned by the author and included solely as a test fixture so the
+[`demo/`](demo/) is reproducible.

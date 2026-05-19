@@ -1,6 +1,8 @@
 # examples
 
-This repo **never ships audio** (all media is `.gitignore`d). Instead,
+This repo **never ships third-party audio** — all media is `.gitignore`d.
+(The one exception is `demo/level-up-v4.mp3`, the author's own track,
+shipped solely as a test fixture; see [`demo/`](../demo/).) Here,
 `make_examples.py` *synthesizes* lawful, public-domain clips at runtime —
 pure generated tones with structure, carrying no third-party rights:
 

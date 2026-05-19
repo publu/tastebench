@@ -12,6 +12,12 @@
 *.mkv
 *.npz
 
+# Exception — the ONLY audio in the repo: the author's own track, owned
+# by the author and shipped solely as a test fixture so the demo is
+# reproducible (see demo/README.md). The no-audio policy is about
+# rights-sensitive / third-party media; this is neither.
+!demo/level-up-v4.mp3
+
 # --- secrets / credentials (NEVER commit) ---
 .env
 .env.*
