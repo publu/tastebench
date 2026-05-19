@@ -12,12 +12,6 @@
 *.mkv
 *.npz
 
-# Exception — the ONLY audio in the repo: the author's own track, owned
-# by the author and shipped solely as a test fixture so the demo is
-# reproducible (see demo/README.md). The no-audio policy is about
-# rights-sensitive / third-party media; this is neither.
-!demo/level-up-v4.mp3
-
 # --- secrets / credentials (NEVER commit) ---
 .env
 .env.*
@@ -76,3 +70,13 @@ examples/_work/
 *.mkv
 *.webm
 *.m4v
+
+# --- the only media the repo ships (everything above stays ignored) ---
+# These two sit at the very end so no pattern above can re-ignore them.
+# The no-media policy is about rights-sensitive / third-party content;
+# neither of these is that. See examples/README.md.
+#  · level-up-v4.mp3 — the author's own track, the author's own work.
+#  · kolm.mp4 — a tastebench web-QA capture of kolm.ai (a friend's
+#    project), included with permission to demo the web path.
+!examples/level-up-v4.mp3
+!examples/kolm.mp4

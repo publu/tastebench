@@ -40,7 +40,7 @@ computed locally, no GPU:
   8 other networks   no differential     ▏                         −0.7
  ───────────────────────────────────────────────────────────────────
  ✦ stable across the whole track (reliability ~0.98)
- a predicted response pattern, not a verdict · full read → demo/
+ a predicted response pattern, not a verdict · full read → examples/
 ```
 
 That *shape* — motion / attention / body, stable end to end, the rest
@@ -112,8 +112,8 @@ video land in the *same* space.
 > al., *Science* 2006). It measures *near vs. far from the taste you
 > gave it* — nothing else. That honesty is the point.
 
-See the full neural + craft read on a **real released track**, computed
-locally on an M1 in ~4m40s with no GPU: [`demo/`](demo/).
+See the full neural read on a **real released track**, computed locally
+on an M1 in ~4m40s with no GPU: [`examples/`](examples/).
 
 > **Licensing.** This wrapper is MIT, but it runs on Meta's **TRIBE v2**
 > (CC-BY-NC-4.0) and **Llama 3.2**. The tool *as a whole* is
@@ -258,7 +258,6 @@ python -m tastebench                       # the worker, no pip install needed
 python -m tastebench compare a.wav b.wav --to demo.wav
 make test                                  # model-free smoke suite
 pip install -e .                           # manual: core only (numpy/librosa/rich)
-python examples/make_examples.py           # lawful synthetic clips (no media shipped)
 ```
 
 `ffmpeg` must be on PATH for non-WAV audio. Web QA needs
@@ -277,7 +276,9 @@ al., *NeuroImage* 2019), implemented independently.
 pip install -e ".[dev]" && pytest -q       # model-free smoke suite (synthesizes its own audio)
 ```
 
-No third-party audio, secrets, or model weights are ever committed (see
-`.gitignore`) — code only, with one deliberate exception:
-`demo/level-up-v4.mp3`, the author's own track, included solely as a test
-fixture so [`demo/`](demo/) is reproducible.
+No rights-sensitive media, secrets, or model weights are ever committed
+(see `.gitignore`) — code only, save two deliberate items in
+[`examples/`](examples/): `level-up-v4.mp3` (the author's own track, so
+the read there is reproducible) and `kolm.mp4` (a web-QA capture of
+kolm.ai, a friend's project, included with permission to demo the web
+path).
