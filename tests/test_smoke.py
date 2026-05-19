@@ -144,3 +144,27 @@ def test_cli_help_and_glossary():
     assert cp.returncode == 0
     assert "CRAFT FEATURES" in cp.stdout
     assert "BRAIN NETWORKS" in cp.stdout
+
+
+def test_webcap_imports_and_degrades_without_browser(tmp_path):
+    """webcap must import with no browser dep (like the brain layer) and
+    fail with a clear, actionable error — never a bare ImportError.
+    Model-free and network-free: no page is ever fetched."""
+    from tastebench import webcap
+
+    assert webcap.url_to_stem("https://Example.com/a/b/") == "Example.com-a-b"
+
+    with pytest.raises(ValueError):  # not http(s) — caught before any dep
+        webcap.capture_site("ftp://nope", tmp_path / "x.mp4")
+
+    # An empty / url-less dir is a clean no-op (worker hook stays safe).
+    assert webcap.expand_url_drops(tmp_path) == []
+    (tmp_path / "note.txt").write_text("no link here\n")
+    assert webcap.expand_url_drops(tmp_path) == []
+
+    # `web` verb is registered and shows in help.
+    cp = subprocess.run(
+        [sys.executable, "-m", "tastebench.cli", "--help"],
+        capture_output=True, text=True, cwd=ROOT,
+    )
+    assert "web" in cp.stdout

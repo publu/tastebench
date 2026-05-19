@@ -130,6 +130,31 @@ numbers + the **full explainer glossary** + a framing question) you can
 paste into any LLM for a deeper, grounded explanation. Add `--format json`
 for machine output, `-o FILE` to write to disk.
 
+## Web QA — grade a live URL
+
+A website *is* a video to this tool: drive a real browser to the page,
+autoscroll it, and grade the recording's visual signature against a
+taste you defined (a set of pages/screens you like).
+
+```
+tastebench web https://your.site --like good1.mp4 good2.png   # verdict
+tastebench web https://your.site --mp4 site.mp4                # just record
+```
+
+Or, in the **worker**, drop a `.url` / `.webloc` (or a one-line text file
+with the link) into any `refs/` or `draft/` — it's recorded to a silent
+sibling `.mp4` once and then graded like any other video.
+
+The recording is **silent by design** (the QA target is the visual
+experience), so the brain pipeline auto-drops the audio/text stages — no
+transcription. It does *not* OCR on-screen text; it scores layout /
+motion / density / contrast, not copy. One-time setup (heavy, optional,
+like the brain layer — the package works fine without it):
+
+```
+pip install 'tastebench[web]' && playwright install chromium
+```
+
 ## Install — clone, then `make`
 
 ```bash

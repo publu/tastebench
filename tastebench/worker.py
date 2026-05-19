@@ -155,6 +155,22 @@ def scan_once(
         return stable
 
     for name, refs_dir, draft_dir in _discover(root):
+        # Web QA: a dropped .url/.webloc is recorded to a sibling silent
+        # .mp4 first (once; skipped if already fresh), then graded like
+        # any other video. A bad link writes a .url.error and never
+        # stalls the scan.
+        for _wd in (refs_dir, draft_dir):
+            try:
+                from .webcap import expand_url_drops
+
+                for _m in expand_url_drops(_wd):
+                    console.print(
+                        f"[green]✓[/] captured [bold]{_m.name}[/] "
+                        f"from a dropped link"
+                    )
+            except Exception:  # noqa: BLE001 — capture never breaks the worker
+                pass
+
         # Settle refs and drafts every pass (even before refs exist) so a
         # draft dropped first still stabilizes in parallel.
         refs = _stable(_media_in(refs_dir))

@@ -48,6 +48,10 @@ brain = [
 ]
 # Apple-GPU ASR path: much faster Whisper transcription on M-series.
 mlx = ["mlx-whisper"]
+# Web QA front-end: drive a real browser, scroll, record the page to a
+# silent mp4 that the video path then grades. Not a core dep (like the
+# brain layer). One-time browser fetch: `playwright install chromium`.
+web = ["playwright>=1.40"]
 dev = ["pytest"]
 
 [project.scripts]

@@ -122,6 +122,30 @@ def build_parser() -> argparse.ArgumentParser:
     )
     _add_common(p_vibe)
 
+    p_web = sub.add_parser(
+        "web",
+        help="record a live URL (silent screen capture) and grade it vs a "
+        "taste — the web-QA front-end",
+    )
+    p_web.add_argument("url", help="http(s) URL to capture")
+    p_web.add_argument(
+        "--like", nargs="+", metavar="REF", default=None,
+        help="reference media you admire (omit → just save the recording)",
+    )
+    p_web.add_argument(
+        "--seconds", type=float, default=12.0,
+        help="capture / scroll duration (default 12)",
+    )
+    p_web.add_argument(
+        "--mp4", metavar="PATH", default=None,
+        help="where to save the recording (default ./<site>.mp4)",
+    )
+    p_web.add_argument(
+        "--deep", action="store_true",
+        help="full report instead of the one-screen verdict",
+    )
+    _add_common(p_web)
+
     p_gloss = sub.add_parser("glossary", help="print the explainer dictionary")
     p_gloss.add_argument(
         "term", nargs="?", help="a single term to explain in full"
@@ -227,6 +251,35 @@ def main(argv: list[str] | None = None) -> int:
         if not args.refs:
             return _launch_interactive()
         return tui.run(args.refs, demo=args.demo, use_brain=not args.no_brain)
+
+    if args.cmd == "web":
+        from .webcap import WebCaptureUnavailable, capture_site
+
+        try:
+            mp4 = capture_site(args.url, args.mp4, seconds=args.seconds)
+        except WebCaptureUnavailable as e:
+            print(str(e), file=sys.stderr)
+            return 3
+        except ValueError as e:
+            ap.error(str(e))
+            return 2
+        print(f"recorded {mp4}", file=sys.stderr)
+        if not args.like:
+            print(mp4)
+            return 0
+        from . import report as _report
+        from .compare import compare
+
+        payload = compare(str(mp4), args.like, use_brain=not args.no_brain)
+        payload["_kind"] = "compare"
+        brief = not args.deep and not args.llm and args.format == "markdown"
+        text = (
+            _report.to_verdict(payload)
+            if brief
+            else _report.render(payload, fmt=args.format, llm=args.llm)
+        )
+        _emit(text, args.out)
+        return 0
 
     use_brain = not args.no_brain
     from . import report as _report
