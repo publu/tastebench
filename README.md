@@ -26,8 +26,9 @@ waiting. tastebench is that gut-check in **seconds, on your machine**,
 before anyone else hears it.
 
 Point it at a handful of **references** — the work you wish yours felt
-like (tracks, videos, images). It learns the *taste* they share. Drop
-your **draft**. It tells you, in plain language, how close you are, which
+like: **audio tracks, full videos, or still images** (a meme, a frame,
+a piece of key art). It learns the *taste* they share. Drop your
+**draft** — same three kinds, mix them freely. It tells you, in plain language, how close you are, which
 reference you're nearest, and a **ranked list of fixes** — biggest lever
 first, each with a confidence label and how to act:
 
@@ -194,6 +195,35 @@ required to use the tool.
   layer reports a clear *"models not downloaded — run
   scripts/download_models.py"* and analysis falls back to craft-only.
 
+#### Video on Apple Silicon scales itself to your RAM (automatic)
+
+Upstream TRIBE runs video through `vjepa2-vitg-fpc64-256` at **64
+frames/clip, full resolution** — an unbounded working set that exhausts
+(and kernel-panics) a 32 GB Mac on the very first clip. So on Apple
+Silicon the engine **auto-caps the video extractor by total RAM** — it
+picks `num_frames` (the dominant memory + speed lever) and a modest
+`max_imsize` so the brain video path completes safely on any M-series
+machine instead of taking it down. Indicative: 16 GB → 4 frames, 32 GB →
+8, 48 GB → 16, 64 GB → 24, 96 GB → 48. A 12 s/720p clip then runs in
+**~30 s** on a 32 GB M1 Pro (vs. not finishing at all).
+
+This is a **speed/fidelity trade**: fewer frames/clip means the video
+encoder sees coarser motion than the 64-frame baseline, so Apple-Silicon
+video predictions are *not* numerically identical to a full GPU run (the
+audio/text speed layer, by contrast, *is* byte-identical). Knobs:
+
+| env | default | effect |
+|---|---|---|
+| `TRIBE_VIDEO_AUTO` | `1` | `0` → upstream defaults (64 frames, full res — will OOM small Macs) |
+| `TRIBE_VIDEO_FRAMES` | auto | force `num_frames` |
+| `TRIBE_VIDEO_IMSIZE` | auto | force `max_imsize` (`0` = no cap) |
+
+**CUDA, a ≥128 GiB box, or `TRIBE_VIDEO_AUTO=0` are untouched** — run on a
+GPU / **Modal** and you get the full-fidelity upstream pipeline (64
+frames, full resolution, transcription, every bell and whistle). The RAM
+scaling exists purely so a laptop can run *something* faithful enough to
+be useful without crashing; trust the score from the GPU/Modal run.
+
 ## The explainer dictionary
 
 A first-class deliverable: `tastebench/explainers/explainers.json` — one
@@ -205,26 +235,30 @@ embeds the whole dictionary. Browse it with `tastebench glossary`.
 
 ## How it works
 
-Two layers run on each file.
+Three kinds of input — audio tracks, full videos, still images — and two
+layers run on every file, whatever its modality.
 
-**Brain.** Your references and your draft go through TRIBE — Meta's
-*fMRI-encoding* model, which predicts the brain response a piece of audio,
-video, or text evokes. tastebench reads that prediction out as a
-12-network *Cole-Anticevic* signature: how strongly the work drives the
-auditory, reward, default-mode (DMN), frontoparietal and other networks.
-Your references define a target signature; your draft is scored against how
-far it sits from it, network by network.
+**Brain.** Every file — audio, video, or image — goes through TRIBE,
+Meta's *fMRI-encoding* model, which predicts the brain response it evokes.
+tastebench reads that prediction out as a 12-network *Cole-Anticevic*
+signature: how strongly the work drives the auditory, reward, default-mode
+(DMN), frontoparietal and other networks. One model spans all three
+modalities, so a track and a video land in the *same* signature space.
+Your references define a target signature; your draft is scored by how far
+it sits from it, network by network.
 
-**Craft.** A model-free layer (librosa-derived) measures the concrete,
-fixable stuff — hook timing, loopability, chorus lift, tempo and key
-stability, dynamics; colour, contrast and motion for video and images. No
-download, sub-second; it's also what the tool falls back to when the model
-isn't installed.
+**Craft.** A model-free layer for the concrete, fixable stuff — and it
+splits by modality. **librosa** drives the audio features (hook timing,
+loopability, chorus lift, tempo and key stability, dynamics); librosa is
+audio-only by design, so for **video and images** a **PIL**-derived path
+takes over (palette, contrast, composition — plus cut pacing and motion
+energy for video). No download, sub-second; it's also the graceful
+fallback when the model isn't installed.
 
-| Layer | What it measures | Needs the model? | Non-audio? |
+| Layer | What it measures | Needs the model? | Modalities |
 |---|---|---|---|
-| Brain | TRIBE → 12-network Cole-Anticevic signature | Yes (~20 GB) | yes — carries video/image |
-| Craft | librosa musician-actionable features | No | no-ops gracefully |
+| Brain | TRIBE → 12-network Cole-Anticevic signature | Yes (~20 GB) | audio · video · image — one model |
+| Craft | actionable features: librosa (audio) + PIL (image/video) | No | audio · video · image |
 
 The brain layer is a *hypothesis view* — it reports a *predicted* neural
 response, not a validated outcome — and the tool says so wherever it

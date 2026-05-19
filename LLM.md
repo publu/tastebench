@@ -1,6 +1,11 @@
-# CLAUDE.md
+# LLM.md
 
-Guidance for agents working in this repo.
+Guidance for LLM coding agents working in this repo.
+
+Treat this as shared project guidance, not tool-specific ownership. Keep
+assistant-specific state, scheduled tasks, credentials, memories, lockfiles,
+and other local runtime artifacts out of tracked repo files unless the user
+explicitly asks for them.
 
 ## What this is
 
@@ -8,8 +13,9 @@ Guidance for agents working in this repo.
 then grades your own draft against it and lists ranked edits. Two layers
 run per file:
 
-- **Craft** — model-free, librosa/PIL-derived, sub-second. The default and
-  the graceful fallback. Never needs a download.
+- **Craft** — model-free, sub-second. Audio uses librosa; still images and
+  video use the PIL-derived visual path. The default and graceful fallback.
+  Never needs a download.
 - **Brain** — Meta's TRIBE fMRI-encoder (~20 GB, gated Llama-3.2). Optional;
   degrades cleanly to craft when absent.
 
@@ -33,11 +39,11 @@ green; add a smoke test for new surfaces.
 The product's main surface is **`tastebench/worker.py`**, launched by bare
 `tastebench` / `python -m tastebench`. It watches
 `<root>/references/<name>/{refs,draft}/` — each `<name>` is one experiment;
-`refs/` defines a taste, `draft/` is graded against it, a
-`<draft>.report.md` is written next to the taste. Poll-based and
+`refs/` defines a taste, `draft/` is graded against it, and a
+`<draft>.report.md` is written next to the draft. Poll-based and
 settle-aware (no partial reads). The CLI verbs (`compare`/`optimize`/…) and
 `tastebench drop` are kept for scripting/legacy — do not re-make the CLI
-the default. See `memory/` for the recorded product direction.
+the default.
 
 ## Architecture (one job per module)
 
@@ -61,6 +67,9 @@ the default. See `memory/` for the recorded product direction.
 - Python 3.11–3.12. Modules are docstring-heavy and single-purpose; match
   that voice. Lazy imports in `cli.py`/surfaces keep startup fast and the
   package importable with no model.
+- Keep repo instructions agent-neutral. Do not introduce tool-specific
+  automation, background tasks, or lockfiles into tracked files without an
+  explicit user request.
 - Never commit media, weights, secrets, or large caches (see `.gitignore`).
   No model weights are vendored — they're declared deps the user installs.
 - License: wrapper is MIT but the tool *as a whole* is non-commercial

@@ -373,7 +373,16 @@ def prompt_flow(_input=None) -> int:
     console.print()
     if have:
         console.print("[green]✓ brain weights ready.[/] Every file you drop "
-                      "is auto-processed through TRIBE as it lands.\n")
+                      "is auto-processed through TRIBE as it lands.")
+        try:
+            from .engine import describe_video_autoconfig
+
+            _vline = describe_video_autoconfig()
+            if _vline:
+                console.print(f"[dim]  {_vline}[/]")
+        except Exception:
+            pass
+        console.print()
     elif interactive:
         console.print("[yellow]● brain weights not installed (~20 GB).[/]")
         try:

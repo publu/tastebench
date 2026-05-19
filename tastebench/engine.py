@@ -93,6 +93,126 @@ def _resolve_device() -> str:
         return "cpu"
 
 
+def _total_ram_gb() -> float:
+    """Total physical RAM in GiB. Conservative 16.0 if it can't be read."""
+    import os
+
+    try:
+        import platform
+        import subprocess
+
+        if platform.system() == "Darwin":
+            out = subprocess.run(
+                ["sysctl", "-n", "hw.memsize"],
+                capture_output=True, text=True, check=True,
+            )
+            return int(out.stdout.strip()) / (1024 ** 3)
+        return (os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES")) / (
+            1024 ** 3
+        )
+    except Exception:
+        return 16.0
+
+
+# (min RAM GiB, num_frames, max_imsize). Upstream runs video through
+# `vjepa2-vitg-fpc64-256` at 64 frames/clip full-res — an unbounded working
+# set that OOM-panics a 32 GB Mac on the first clip. `num_frames` is the
+# dominant RAM+speed lever; `max_imsize` barely moves speed (the model is
+# natively 256 px) and only trades RAM headroom, so it stays modest.
+# Calibrated on a 32 GB M1 Pro: 8 frames completes with ~1.7 GB headroom,
+# 16 frames OOMs — every tier below stays inside that envelope. Descending.
+_VIDEO_RAM_TIERS = (
+    (96, 48, 288),
+    (64, 24, 288),
+    (48, 16, 256),
+    (36, 10, 256),
+    (32,  8, 256),
+    (24,  6, 256),
+    (16,  4, 224),
+    (0,   4, 192),
+)
+
+
+def _auto_video_config(device: str, quiet: bool = False) -> dict:
+    """RAM-aware caps for the video extractor so the brain video path fits
+    on any Apple-Silicon Mac instead of OOM-panicking it.
+
+    The video counterpart of the text ``config_update`` in ``get_model``:
+    upstream never caps ``data.video_feature``, so video ran
+    ``vjepa2-vitg-fpc64-256`` at 64 frames/clip full-res and exhausted a
+    32 GB Mac. We pick ``num_frames``/``max_imsize`` from total RAM.
+
+    Opt-out / override (mirrors the other speed-layer env knobs):
+      ``TRIBE_VIDEO_AUTO=0``    use upstream defaults (full fidelity)
+      ``TRIBE_VIDEO_FRAMES=N``  force num_frames
+      ``TRIBE_VIDEO_IMSIZE=N``  force max_imsize (0 = no cap)
+
+    CUDA, a ≥128 GiB box, or ``TRIBE_VIDEO_AUTO=0`` are left untouched — a
+    GPU box / Modal run keeps full upstream fidelity (64 frames, full res,
+    transcription) by design. Fewer frames than that baseline is the
+    documented Apple-Silicon trade (see README "Hardware reality").
+    """
+    import os
+
+    if device == "cuda" or os.environ.get("TRIBE_VIDEO_AUTO", "1") == "0":
+        return {}
+
+    ram = _total_ram_gb()
+    if ram >= 128:
+        return {}  # workstation: treat like a GPU box, no caps
+
+    frames, imsize = next(
+        (f, i) for lo, f, i in _VIDEO_RAM_TIERS if ram >= lo
+    )
+
+    fenv = os.environ.get("TRIBE_VIDEO_FRAMES")
+    ienv = os.environ.get("TRIBE_VIDEO_IMSIZE")
+    if fenv:
+        frames = int(fenv)
+    if ienv is not None:
+        imsize = int(ienv)
+
+    cfg: dict = {"data.video_feature.num_frames": frames}
+    if imsize:  # 0 / unset -> leave upstream default (no cap)
+        cfg["data.video_feature.max_imsize"] = imsize
+
+    if not quiet:
+        try:
+            import logging
+
+            logging.getLogger(__name__).info(
+                "[engine] RAM-aware video config: %.0f GiB -> %s "
+                "(TRIBE_VIDEO_AUTO=0 to disable; "
+                "TRIBE_VIDEO_FRAMES/IMSIZE to override)",
+                ram, cfg,
+            )
+        except Exception:
+            pass
+    return cfg
+
+
+def describe_video_autoconfig() -> "str | None":
+    """One-line, model-free summary of the RAM-aware video caps for the
+    startup banner. ``None`` when nothing is capped (CUDA / ≥128 GiB /
+    ``TRIBE_VIDEO_AUTO=0``) — there is nothing to tell the user then.
+    """
+    try:
+        device = _resolve_device()
+        cfg = _auto_video_config(device, quiet=True)
+        if not cfg:
+            return None
+        nf = cfg.get("data.video_feature.num_frames")
+        im = cfg.get("data.video_feature.max_imsize")
+        ram = _total_ram_gb()
+        tail = f", {im}px" if im else ""
+        return (
+            f"video auto-tuned for {ram:.0f} GB RAM → {nf} frames/clip{tail} "
+            f"(set TRIBE_VIDEO_FRAMES / TRIBE_VIDEO_AUTO=0 to change)"
+        )
+    except Exception:
+        return None
+
+
 def get_model():
     """Load the TRIBE model once per process. Raises ModelsNotDownloaded
     with an actionable message if the package or cache is missing.
@@ -147,6 +267,12 @@ def get_model():
                 "data.audio_feature.device": device,
             }
         )
+
+    # Video counterpart of the text config_update above: upstream never
+    # caps data.video_feature, so video runs vjepa2-vitg-fpc64-256 at 64
+    # frames/clip full-res and OOM-panics Apple Silicon. Cap by RAM.
+    # No-op on CUDA / ≥128 GiB / TRIBE_VIDEO_AUTO=0 (full fidelity there).
+    config_update.update(_auto_video_config(device))
 
     # Model resolution can transiently fail ("model … does not exist",
     # network/HTTP, or concurrent HF-cache access from another process):
