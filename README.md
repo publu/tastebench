@@ -94,15 +94,16 @@ You run one command. It loops from there.
   *fix the hook timing first.*
 - **Video** — match the cut pacing, motion energy, palette and contrast
   of an edit you admire.
-- **Websites** — a page *is* a video here. It drives a real browser,
-  autoscrolls, and grades the recording's visual signature against pages
-  you like. Drop a `.url` into `refs/`/`draft/`, or
-  `tastebench web https://your.site --like good1.mp4`.
+- **Websites** — it drives a real browser, autoscrolls the page, and
+  grades the experience against the pages you like. Drop a `.url` into
+  `refs/`/`draft/`, or `tastebench web https://your.site --like good1.mp4`.
 - **A/B a decision** — two mixes / cuts / versions, same references:
   which is actually closer, by how much, on which signals.
-- **Brief an LLM** — `--llm` emits a self-contained bundle (raw numbers +
-  full glossary) you paste into any model for a grounded, no-hallucination
-  read.
+- **Drop it in an AI loop** — `--format json` is machine output and the
+  worker auto-grades every drop, so an agent can generate a draft, read
+  back the score and ranked levers, and iterate toward a taste with no
+  human in the loop. `--llm` packs the raw numbers + full glossary into
+  one bundle for the model to act on.
 
 Mix modalities freely — one model spans all three, so a track and a
 video land in the *same* space.
