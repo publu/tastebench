@@ -123,28 +123,59 @@ def capture_site(
     return out_path
 
 
-def _autoscroll(page, seconds: float) -> None:
-    """Smooth top→bottom sweep over ``seconds`` (then hold at the end).
+# One scroll step. Robust to the common failure mode: many sites scroll
+# an inner container (SPAs/dashboards), not the document — so pick the
+# largest genuinely-scrollable target each step, force instant (not
+# smooth) scrolling, and report whether it actually advanced.
+_STEP_JS = """() => {
+  const seen = new Set();
+  const cands = [document.scrollingElement, document.documentElement,
+                 document.body];
+  let best = null, bestGain = 0;
+  const consider = (el) => {
+    if (!el || seen.has(el)) return; seen.add(el);
+    const gain = el.scrollHeight - el.clientHeight;
+    if (gain <= bestGain || gain < 8) return;
+    const oy = el === document.scrollingElement ? 'auto'
+             : getComputedStyle(el).overflowY;
+    if (oy === 'auto' || oy === 'scroll' || el === document.scrollingElement)
+      { best = el; bestGain = gain; }
+  };
+  cands.forEach(consider);
+  const all = document.querySelectorAll('div,main,section,article,ul,ol');
+  for (let i = 0; i < all.length && i < 4000; i++) consider(all[i]);
+  if (!best) return {moved: false, done: true, y: 0, h: 0};
+  best.style.scrollBehavior = 'auto';
+  const before = best.scrollTop;
+  best.scrollTop = before + Math.round(best.clientHeight * 0.6);
+  const after = best.scrollTop;
+  return {moved: after > before + 1, done: after <= before + 1,
+          y: after, h: bestGain};
+}"""
 
-    Done from Python (not one blocking JS call) so the recorder captures
+
+def _autoscroll(page, seconds: float) -> None:
+    """Top→bottom sweep over ``seconds`` (then hold at the end).
+
+    Paced from Python (not one blocking JS call) so the recorder captures
     the motion and the duration is predictable regardless of page size.
+    Only declares the page exhausted after several consecutive no-move
+    steps, so a momentarily-stuck frame (lazy load, sticky header) does
+    not end the scroll on the top fold.
     """
     end = time.monotonic() + max(2.0, seconds)
     step = 0.2
+    stuck = 0
     while time.monotonic() < end:
         try:
-            at_bottom = page.evaluate(
-                "() => { const e=document.scrollingElement||document.body;"
-                " const before=e.scrollTop;"
-                " e.scrollBy(0, Math.round(window.innerHeight*0.6));"
-                " return e.scrollTop===before; }"
-            )
+            r = page.evaluate(_STEP_JS)
         except Exception:  # noqa: BLE001
-            at_bottom = True
-        if at_bottom:  # reached the end — hold here for the remaining time
+            r = {"moved": False, "done": True}
+        stuck = stuck + 1 if not r.get("moved") else 0
+        if r.get("done") and stuck >= 5:  # ~1s of no progress → at the end
             remaining = end - time.monotonic()
             if remaining > 0:
-                time.sleep(remaining)
+                time.sleep(remaining)  # hold the final view for the rest
             break
         time.sleep(step)
 
